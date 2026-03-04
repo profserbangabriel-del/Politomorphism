@@ -1,18 +1,49 @@
 import math
+import requests
 
-def calculeaza_rezonanta(V, A, D, N, lam=0.5):
-    """
-    V = Viteza, A = Greutate Afectiva, D = Drift, N = Network Reach
-    Formula SRM v1.1: V * A * e^(-lambda * D) * N
-    """
-    drift_penalty = math.exp(-lam * D)
-    score = V * A * drift_penalty * N
+def motor_srm_live(api_key, query):
+    # 1. Colectăm date reale prin NewsAPI
+    #
+    url = f"https://newsapi.org/v2/everything?q={query}&apiKey={api_key}"
+    response = requests.get(url).json()
     
-    # Clasificarea starilor conform modelului tau
-    if score >= 0.8: return "HEGEMONIC RESONANCE"
-    if score >= 0.5: return "ACTIVE RESONANCE"
-    if score >= 0.2: return "MARGINAL SIGNAL"
-    return "SYMBOLIC EXTINCTION"
+    articles = response.get('articles', [])
+    total_results = response.get('totalResults', 0)
+    
+    # 2. Calculăm variabilele SRM conform modelului tău v1.1
+    #
+    
+    # N (Network Reach) - bazat pe diversitatea surselor media
+    surse_unice = len(set([a['source']['name'] for a in articles]))
+    N = min(surse_unice / 20, 1.0) 
+    
+    # V (Velocity) - bazat pe volumul de știri găsite
+    V = min(total_results / 100, 1.0)
+    
+    # Valori teoretice pentru A și Drift (vor fi automatizate ulterior)
+    #
+    A = 0.7  # Affective Weight
+    D = 0.1  # Semantic Drift
+    lam = 0.5
+    
+    # 3. Formula SRM: V * A * e^(-lambda * D) * N
+    #
+    scor = V * A * math.exp(-lam * D) * N
+    
+    # Clasificarea stării politice
+    if scor >= 0.8: stare = "HEGEMONIC RESONANCE"
+    elif scor >= 0.5: stare = "ACTIVE RESONANCE"
+    elif scor >= 0.2: stare = "MARGINAL SIGNAL"
+    else: stare = "SYMBOLIC EXTINCTION"
+    
+    return round(scor, 4), stare
 
-# Test cu valorile tale
-print(f"Stare Simbol: {calculeaza_rezonanta(0.8, 0.7, 0.1, 0.9)}")
+# --- CONFIGURAȚIA TA ---
+# Am introdus cheia furnizată de tine mai sus
+CHEIA_MEA = "0f6ffb837cf44ef787caa597f2872c14" 
+SIMBOL = "democracy" # Poți schimba cu orice termen politic
+
+scor_final, status = motor_srm_live(CHEIA_MEA, SIMBOL)
+print(f"Analiză pentru '{SIMBOL}':")
+print(f"Scor Rezonanță: {scor_final}")
+print(f"Stare Politică: {status}")
