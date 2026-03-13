@@ -80,17 +80,28 @@ Raw data and semantic drift calculations for this case study can be found in the
 
 ## Case Study 2: SRM Validation — Calin Georgescu
 
+**Period:** November – December 2024
+
 ### Validation Results
 
-![SRM Georgescu](SRM_grafic_final_EN.png)
+![SRM Georgescu](SRM_grafic_final.png)
+
+**SRM = V × A × e^(−λD) × N = 0.75 × 0.398 × 0.119 × 0.60 = 0.0307 → LOW RESONANCE**
+
+[View raw data](SRM_raport_final.json)
+
 ---
 
 ## Case Study 3: SRM Validation — Donald Trump
+
+**Period:** February 2015 – November 2016
 
 ### Validation Results
 
 ![SRM Trump Temporal](SRM_trump_temporal.png)
 
 ![SRM Trump](SRM_trump_grafic.png)
+
+**SRM = V × A × e^(−λD) × N = 0.9580 × 0.5800 × 0.2660 × 0.7200 = 0.0922 → MEDIUM RESONANCE**
 
 [View raw data](SRM_trump_result.json)
