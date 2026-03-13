@@ -21,10 +21,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instaleaza pachete
-        run: pip install vaderSentiment pandas numpy matplotlib scipy requests
+      - name: Cache HuggingFace model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-distilbert-sst2-v1
 
-      - name: PAS 2 - Sentiment A
+      - name: Instaleaza pachete
+        run: pip install transformers torch pandas numpy matplotlib scipy
+
+      - name: PAS 2 - Sentiment Analysis
         run: python srm_pipeline/pas2_A_sentiment.py "${{ github.event.inputs.symbol }}"
 
       - name: PAS 3 - Semantic Drift D
