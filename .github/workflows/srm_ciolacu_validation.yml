@@ -1,0 +1,44 @@
+name: SRM Validation Pipeline - Ciolacu
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: 'Simbolul de analizat'
+        required: true
+        default: 'Marcel Ciolacu'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  srm_pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instaleaza pachete
+        run: pip install vaderSentiment pandas numpy matplotlib scipy requests
+
+      - name: PAS 2 - Sentiment A
+        run: python srm_pipeline/pas2_A_sentiment.py "${{ github.event.inputs.symbol }}"
+
+      - name: PAS 3 - Semantic Drift D
+        run: python srm_pipeline/pas3_D_semantic_drift.py "${{ github.event.inputs.symbol }}"
+
+      - name: PAS 4 - Network Coverage N
+        run: python srm_pipeline/pas4_N_gdelt.py "${{ github.event.inputs.symbol }}"
+        continue-on-error: true
+
+      - name: PAS 5 - Scor SRM Final
+        run: python srm_pipeline/pas5_SRM_final.py "${{ github.event.inputs.symbol }}"
+
+      - name: Salveaza rezultate
+        uses: actions/upload-artifact@v4
+        with:
+          name: srm-rezultate-ciolacu
+          path: rezultate/
