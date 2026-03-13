@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -28,7 +28,16 @@ jobs:
         run: |
           python srm_trump_engine.py
 
-      - name: Commit results
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: srm-trump-results
+          path: |
+            SRM_trump_result.json
+            SRM_trump_grafic.png
+            SRM_trump_temporal.png
+
+      - name: Commit results to repo
         run: |
           git config --global user.name "profserbangabriel-del"
           git config --global user.email "actions@github.com"
