@@ -1,0 +1,22 @@
+{
+  "symbol": "donald trump",
+  "context": "US Presidential Campaign 2015-2016",
+  "data_source": "Media Cloud — US National + State & Local collections",
+  "period": "2015-02-01 to 2016-11-01",
+  "n_observations": 640,
+  "variables": {
+    "V_viral_velocity": 0.958,
+    "A_affective_weight": 0.580,
+    "D_semantic_drift": 0.734,
+    "lambda": 2,
+    "semantic_factor": 0.2304,
+    "N_network_coverage": 0.720
+  },
+  "SRM": 0.0922,
+  "interpretation": "MEDIUM RESONANCE",
+  "escalation_factor": 82.3,
+  "baseline_mean_ratio": 0.003129,
+  "peak_ratio": 0.2575,
+  "peak_date": "2016-10-10",
+  "notes": "Third SRM validation. First confirmed Medium Resonance case in dataset. Highest V across all validations to date."
+}
