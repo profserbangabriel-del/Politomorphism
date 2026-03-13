@@ -58,4 +58,14 @@ OSF. https://doi.org/10.17605/OSF.IO/YA9VQ
 Serban, G. F. (2026). *Politomorphism Research Project: SRM Framework, 
 Computational Validation, and Case Studies.*  
 Zenodo. https://doi.org/10.5281/zenodo.18962821
+---
+
+## Studiu de Caz: Validare SRM - Marcel Ciolacu
+**Perioada:** Decembrie 2025 - Martie 2026  
+Datele brute și calculele de drift semantic pentru acest caz pot fi găsite în folderul `/data_ciolacu`.
+
+### Rezultate Validare
+![Grafic Validare Ciolacu](data_ciolacu/SRM_grafic_final.png)
+
+[Vezi setul complet de date aici](./data_ciolacu/)
 
