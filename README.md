@@ -105,3 +105,35 @@ Raw data and semantic drift calculations for this case study can be found in the
 **SRM = V × A × e^(−λD) × N = 0.9580 × 0.5800 × 0.2660 × 0.7200 = 0.0922 → MEDIUM RESONANCE**
 
 [View raw data](SRM_trump_result.json)
+
+
+## Case Study 4: SRM Validation — Sunflower Movement
+
+**Period:** March - April 2014 (validation run: March 2026)
+
+Raw data and semantic drift calculations for this case study can be found in the `/data_sunflower` folder.
+
+### Validation Results
+
+**Symbolic Resonance Mapping (SRM) — Sunflower Movement**  
+*2014 Movement | SRM = 0.0376 | LOW RESONANCE*
+
+![SRM Sunflower Graph](SRM_sunflower_grafic.png)
+
+| Variable | Name | Value |
+|----------|------|-------|
+| **V** | Viral Velocity | 0.750 |
+| **A** | Affective Weight | 0.393 |
+| **D** | Semantic Drift | 0.7737 |
+| **e^(−λD)** | Semantic Factor (λ=2) | 0.2128 |
+| **N** | Network Coverage | 0.600 (12 countries) |
+
+**SRM = V × A × e^(−λD) × N = 0.750 × 0.393 × 0.2128 × 0.600 = 0.0376 — LOW RESONANCE**
+
+### The Resonance Paradox
+
+This case demonstrates the *resonance paradox*: a symbol with high viral velocity (V=0.75) and broad international coverage (N=0.60, across 12 countries) registers low effective political resonance due to high semantic drift (D=0.7737). The exponential penalty e^(−λD) compresses the semantic factor to only 21.28% of its potential value, meaning the symbol circulates with meanings so fragmented that coherent political mobilization becomes practically impossible.
+
+**Countries represented in corpus:** Taiwan, United States, United Kingdom, Japan, Hong Kong, Australia, France, Germany, Canada, South Korea, Singapore, Netherlands
+
+[View raw data](./data_sunflower) | [SRM Report](SRM_sunflower_result.json)
