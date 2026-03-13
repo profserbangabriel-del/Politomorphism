@@ -39,7 +39,18 @@ $$P(S, N) = V \cdot A \cdot e^{-\lambda D} \cdot N$$
 - **$V$** — Visibility / Velocity: The speed and clarity of the symbolic transmission.
 - **$A$** — Amplitude: The initial intensity or "volume" of the symbol.
 - **$e^{-\lambda D}$** — Exponential Decay: Signal loss based on cultural distance ($D$) and decay constant ($\lambda$).
-- **$N$** — Network Density: The size and connectivity of the target audience nodes.
+- **$N$** — Network Density: The total size and connectivity of the target audience nodes.
+
+---
+
+### The Politomorphism Engine: How it Works
+The model operates as a multi-stage feedback loop:
+
+1. **Input (SRM):** Determines if a symbol has the "charge" to affect a specific group.
+2. **Transmission (PSF):** Calculates how far the message travels before fading.
+3. **Impact (EEF):** Measures if the system stays stable or becomes chaotic (entropy).
+
+---
 
 ## Live Demos
 - [SRM Interactive Model](srm_model_ro.html)
