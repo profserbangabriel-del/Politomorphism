@@ -28,7 +28,7 @@ jobs:
           key: hf-distilbert-sst2-v1
 
       - name: Instaleaza pachete
-        run: pip install transformers torch pandas numpy matplotlib scipy
+        run: pip install transformers torch pandas numpy matplotlib scipy requests vaderSentiment gdeltdoc
 
       - name: PAS 2 - Sentiment Analysis
         run: python srm_pipeline/pas2_A_sentiment.py "${{ github.event.inputs.symbol }}"
@@ -38,7 +38,6 @@ jobs:
 
       - name: PAS 4 - Network Coverage N
         run: python srm_pipeline/pas4_N_gdelt.py "${{ github.event.inputs.symbol }}"
-        continue-on-error: true
 
       - name: PAS 5 - Scor SRM Final
         run: python srm_pipeline/pas5_SRM_final.py "${{ github.event.inputs.symbol }}"
