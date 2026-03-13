@@ -31,6 +31,15 @@ S(t) = −Σ p_i(t) · log(p_i(t))
 dS/dt = Π(t) − Φ(t)
 
 ---
+### Propagation Strength Function (PSF)
+This formula quantifies the dynamics of resonance distribution across a network:
+
+$$P(S, N) = V \cdot A \cdot e^{-\lambda D} \cdot N$$
+
+- **$V$** — Visibility / Velocity: The speed and clarity of the symbolic transmission.
+- **$A$** — Amplitude: The initial intensity or "volume" of the symbol.
+- **$e^{-\lambda D}$** — Exponential Decay: Signal loss based on cultural distance ($D$) and decay constant ($\lambda$).
+- **$N$** — Network Density: The size and connectivity of the target audience nodes.
 
 ## Live Demos
 - [SRM Interactive Model](srm_model_ro.html)
