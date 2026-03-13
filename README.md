@@ -83,7 +83,6 @@ Raw data and semantic drift calculations for this case study can be found in the
 ### Validation Results
 
 ![SRM Georgescu](SRM_grafic_final_EN.png)
-
 ---
 
 ## Case Study 3: SRM Validation — Donald Trump
