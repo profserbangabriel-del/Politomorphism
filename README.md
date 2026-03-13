@@ -65,7 +65,7 @@ Zenodo. https://doi.org/10.5281/zenodo.18962821
 Datele brute și calculele de drift semantic pentru acest caz pot fi găsite în folderul `/data_ciolacu`.
 
 ### Rezultate Validare
-![Grafic Validare Ciolacu](data_ciolacu/SRM_grafic_final.png)
+![Grafic Validare Ciolacu](data_ciolacu/SRM_grafic_ciolacu.png)
 
 [Vezi setul complet de date aici](./data_ciolacu/)
 
