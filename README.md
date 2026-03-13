@@ -19,7 +19,7 @@ Politomorphism is an original theoretical framework for analyzing the diffusion 
 
 This is the general formula as defined in the official preprint:
 
-$$SRM = V \cdot A \cdot e^{-\lambda D} \cdot N$$
+SRM = V · A · e^(−λD) · N
 
 - **V** — Visibility / Velocity: The speed and clarity of the symbolic transmission.
 - **A** — Affiliation / Amplitude: The intensity of the connection between the group and the symbol.
@@ -30,9 +30,9 @@ $$SRM = V \cdot A \cdot e^{-\lambda D} \cdot N$$
 
 ### Entropic Equilibrium Function (EEF)
 
-$$S(t) = -\sum p_i(t) \cdot \log(p_i(t))$$
+S(t) = −Σ p_i(t) · log(p_i(t))
 
-$$dS/dt = \Pi(t) - \Phi(t)$$
+dS/dt = Π(t) − Φ(t)
 
 ---
 
@@ -47,8 +47,8 @@ The model operates as a multi-stage feedback loop:
 
 ## Live Demos
 
-- [SRM Interactive Model](#)
-- [Landing Page](#)
+- [SRM Interactive Model](index.html)
+- [Landing Page](politomorphism_landing_ro.html)
 
 ---
 
@@ -62,7 +62,7 @@ Serban Gabriel Florin (2026). *Politomorphism: Symbolic Resonance Mapping (SRM) 
 
 ---
 
-## Case Study: SRM Validation — Marcel Ciolacu
+## Case Study 1: SRM Validation — Marcel Ciolacu
 
 **Period:** December 2025 – March 2026
 
@@ -70,8 +70,28 @@ Raw data and semantic drift calculations for this case study can be found in the
 
 ### Validation Results
 
-*(Charts: SRM = 0.0365 | LOW RESONANCE)*
+![SRM Ciolacu](data_ciolacu/SRM_grafic_ciolacu.png)
 
 **SRM = V × A × e^(−λD) × N = 0.73 × 0.42 × 0.1858 × 0.65 = 0.0365 → LOW RESONANCE**
 
-[View the complete dataset here](#)
+[View the complete dataset here](data_ciolacu/)
+
+---
+
+## Case Study 2: SRM Validation — Calin Georgescu
+
+### Validation Results
+
+![SRM Georgescu](SRM_grafic_final.png)
+
+---
+
+## Case Study 3: SRM Validation — Donald Trump
+
+### Validation Results
+
+![SRM Trump Temporal](SRM_trump_temporal.png)
+
+![SRM Trump](SRM_trump_grafic.png)
+
+[View raw data](SRM_trump_result.json)
