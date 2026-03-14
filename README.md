@@ -152,7 +152,24 @@ Baseline: May 20, 2019 – Feb 23, 2022 (1,011 obs.) | Analysis: Feb 24, 2022 �
 Paper: [SRM_Putin_Validation.docx](SRM_Putin_Validation_FINAL_V4.docx) | Results: [SRM_putin_result.json](data_putin/SRM_putin_result.json) | Data: [data_putin/](data_putin/)
 
 ---
+### Case Study 7 — George Simion (Romania, Oct 2024 – Mar 2026)
 
+Data: Media Cloud Romanian National + State & Local | 1,533 daily observations  
+Baseline: Jan 1, 2022 – Sep 30, 2024 | Analysis: Oct 1, 2024 – Mar 13, 2026
+
+| V | A | D | N | SRM | Interpretation |
+|---|---|---|---|-----|----------------|
+| 0.279 | 0.099* | 0.812 | 0.996 | 0.0054 | LOW RESONANCE |
+
+*\* Lower bound — VADER calibrated for English, applied on Romanian text.*
+
+**Romanian Triada:** Georgescu + Ciolacu + Simion — three symbols from the same national political space, same corpus. All three produce Low Resonance. First within-country controlled comparison in the SRM dataset.
+
+**Peak:** May 2025 (ratio=0.253) — turul 2 prezidențiale, highest ratio in Romanian dataset.
+
+![SRM Simion Chart](data_simion/SRM_simion_chart.png)
+
+Paper: [SRM_Simion_Validation.docx](SRM_Simion_Validation.docx) | Data: [data_simion/](data_simion/)
 ## Repository Structure
 
 ```
