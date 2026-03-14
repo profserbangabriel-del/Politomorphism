@@ -25,7 +25,7 @@ from datetime import datetime
 # ──────────────────────────────────────────────
 # 0. CONFIG — adjust paths if running locally
 # ──────────────────────────────────────────────
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data_zelensky")
 
 FILES = {
     "first_period":  "counts_zelensky_first_period.csv",
