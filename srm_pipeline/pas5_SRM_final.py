@@ -1,62 +1,77 @@
-import sys, os, json
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import sys, json, math, os
+import pandas as pd
 
-os.makedirs("rezultate", exist_ok=True)
+symbol = sys.argv[1] if len(sys.argv) > 1 else "Putin"
+print(f"STEP 5 - Final SRM for: {symbol}")
 
-SIMBOL = sys.argv[1] if len(sys.argv) > 1 else "sunflower movement"
-LAMBDA = float(sys.argv[2]) if len(sys.argv) > 2 else 2.0
+os.makedirs('rezultate', exist_ok=True)
 
-def load(path, key, fallback):
-    try:
-        return json.load(open(path))[key]
-    except:
-        return fallback
+def load_json(path, default):
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    return default
 
-V = 0.75
-A = load("rezultate/rezultat_A.json", "A", 0.80)
-D = load("rezultate/rezultat_D.json", "D", 0.07)
-N = load("rezultate/rezultat_N.json", "N", 0.68)
+pas2 = load_json('rezultate/pas2_sentiment.json', {"A": 0.2593})
+pas3 = load_json('rezultate/pas3_semantic_drift.json', {"D": 0.847})
+pas4 = load_json('rezultate/pas4_network_coverage.json', {"N": 1.0000})
 
-pen = np.exp(-LAMBDA * D)
-SRM = V * A * pen * N
+A = pas2.get("A", 0.2593)
+D = pas3.get("D", 0.847)
+N = pas4.get("N", 1.0000)
 
-if SRM >= 0.70:   zona = "REZONANTA INALTA"
-elif SRM >= 0.40: zona = "REZONANTA MEDIE"
-elif SRM >= 0.20: zona = "SEMNAL MARGINAL"
-else:             zona = "REZONANTA SCAZUTA"
+# Compute V from CSV
+V = 0.2170
+baseline_path = 'data_putin/PUTIN_DATA_FIRST_PERIOD_ATTENTION.csv'
+analysis_path = 'data_putin/PUTIN_DATA_SECOND_PERIOD_ATTENTION.csv'
 
-print(f"\n{'='*45}")
-print(f"  SRM Pipeline - {SIMBOL}")
-print(f"{'='*45}")
-print(f"  V  = {V:.4f}")
-print(f"  A  = {A:.4f}")
-print(f"  D  = {D:.4f}")
-print(f"  N  = {N:.4f}")
-print(f"  e^(-λD) = {pen:.4f}")
-print(f"  SRM = {SRM:.4f}")
-print(f"  {zona}")
-print(f"{'='*45}")
+if os.path.exists(baseline_path) and os.path.exists(analysis_path):
+    df_b = pd.read_csv(baseline_path)
+    df_a = pd.read_csv(analysis_path)
+    df_b['date'] = pd.to_datetime(df_b['date'])
+    df_a['date'] = pd.to_datetime(df_a['date'])
+    cut = pd.Timestamp('2022-02-24')
+    baseline = df_b[df_b['date'] < cut]
+    analysis = df_a[df_a['date'] >= cut]
+    b_avg = baseline['ratio'].mean()
+    a_avg = analysis['ratio'].mean()
+    escalation = a_avg / b_avg
+    V = min(1.0, math.log1p(escalation) / math.log1p(200))
+    print(f"V computed from CSV: escalation {escalation:.2f}x -> V={V:.4f}")
 
-fig, ax = plt.subplots(figsize=(8, 5))
-etichete = ["V", "A", "1-D", "N"]
-valori = [V, A, 1-D, N]
-culori = ["#3498DB","#E74C3C","#27AE60","#9B59B6"]
-bars = ax.bar(etichete, valori, color=culori, alpha=0.85)
-for bar, v in zip(bars, valori):
-    ax.text(bar.get_x()+bar.get_width()/2, v+0.01,
-            f"{v:.3f}", ha='center', fontweight='bold')
-ax.axhline(SRM, color="black", linestyle="--", label=f"SRM={SRM:.4f}")
-ax.set_ylim(0, 1.15)
-ax.set_title(f"SRM = {SRM:.4f} — {zona}\n{SIMBOL}")
-ax.legend()
-plt.tight_layout()
-plt.savefig("rezultate/SRM_grafic_final.png", dpi=150)
+lam = 2
+semantic_factor = math.exp(-lam * D)
+SRM = V * A * semantic_factor * N
 
-with open("rezultate/SRM_raport_final.json", "w") as f:
-    json.dump({"simbol": SIMBOL, "V": V, "A": A, "D": D, "N": N,
-               "SRM": round(SRM,4), "interpretare": zona}, f, indent=2)
+if SRM < 0.07:
+    interpretation = "LOW RESONANCE"
+elif SRM < 0.20:
+    interpretation = "MEDIUM RESONANCE"
+else:
+    interpretation = "HIGH RESONANCE"
 
-print("[OK] Grafic si raport salvate.")
+result = {
+    "symbol": symbol,
+    "V": round(V, 4),
+    "A": round(A, 4),
+    "D": round(D, 4),
+    "semantic_factor": round(semantic_factor, 4),
+    "N": round(N, 4),
+    "SRM": round(SRM, 4),
+    "interpretation": interpretation,
+    "formula": f"SRM = {V:.4f} x {A:.4f} x {semantic_factor:.4f} x {N:.4f}"
+}
+
+with open('rezultate/SRM_putin_result.json', 'w') as f:
+    json.dump(result, f, indent=2)
+
+print(f"\n{'='*40}")
+print(f"V = {V:.4f}")
+print(f"A = {A:.4f}")
+print(f"D = {D:.4f}")
+print(f"e^(-2D) = {semantic_factor:.4f}")
+print(f"N = {N:.4f}")
+print(f"SRM = {SRM:.4f}")
+print(f"Result: {interpretation}")
+print(f"{'='*40}")
+print("Saved: rezultate/SRM_putin_result.json")
