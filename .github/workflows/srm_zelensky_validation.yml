@@ -26,33 +26,62 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install matplotlib numpy vaderSentiment
+        run: pip install matplotlib numpy
 
-      - name: Write validation script
+      - name: Show files in repo
         run: |
-          cat << 'PYEOF' > srm_zelensky_validation.py
-          import csv, json, math, statistics, os
-          from datetime import datetime
+          echo "=== ROOT ==="
+          ls -la
+          echo "=== data_zelensky ==="
+          ls -la data_zelensky/ 2>/dev/null || echo "FOLDER data_zelensky NOT FOUND"
+          echo "=== All CSV files ==="
+          find . -name "*.csv" | sort
 
-          DATA_DIR = "data_zelensky"
-          FILES = {
-              "first_period":  "counts_zelensky_first_period.csv",
-              "second_period": "counts_zelensky_second_period.csv",
-              "usa":           "counts_zelensky_usa.csv",
-              "europe":        "counts_zelensky_europe.csv",
-          }
+      - name: Run SRM Zelensky Validation
+        env:
+          SRM_A: ${{ github.event.inputs.A_value }}
+          SRM_D: ${{ github.event.inputs.D_value }}
+        run: |
+          python3 << 'PYEOF'
+          import csv, json, math, statistics, os, glob
+
+          # Auto-detect CSV files anywhere in repo
+          all_csvs = glob.glob("**/*.csv", recursive=True) + glob.glob("*.csv")
+          print("Found CSV files:", all_csvs)
+
+          def find_csv(keywords):
+              for f in all_csvs:
+                  name = f.lower()
+                  if all(k in name for k in keywords):
+                      return f
+              return None
+
+          f_first  = find_csv(["zelensky", "first"])  or find_csv(["123234"])
+          f_second = find_csv(["zelensky", "second"]) or find_csv(["123459"])
+          f_europe = find_csv(["zelensky", "europe"]) or find_csv(["123844"])
+          f_usa    = find_csv(["zelensky", "usa"])    or find_csv(["124014"])
+
+          print(f"first_period : {f_first}")
+          print(f"second_period: {f_second}")
+          print(f"europe       : {f_europe}")
+          print(f"usa          : {f_usa}")
+
+          if not all([f_first, f_second, f_europe, f_usa]):
+              print("ERROR: Could not find all CSV files!")
+              exit(1)
+
+          def load(path):
+              with open(path, newline="", encoding="utf-8") as fp:
+                  return list(csv.DictReader(fp))
+
+          first  = load(f_first)
+          second = load(f_second)
+          usa    = load(f_usa)
+          europe = load(f_europe)
+
           LAMBDA = 2
           A = float(os.environ.get("SRM_A", "0.640"))
           D = float(os.environ.get("SRM_D", "0.680"))
-
-          def load_csv(f):
-              with open(os.path.join(DATA_DIR, f), newline="", encoding="utf-8") as fp:
-                  return list(csv.DictReader(fp))
-
-          first  = load_csv(FILES["first_period"])
-          second = load_csv(FILES["second_period"])
-          usa    = load_csv(FILES["usa"])
-          europe = load_csv(FILES["europe"])
 
           baseline = statistics.mean([float(r["ratio"]) for r in first if float(r["ratio"]) > 0])
           peak_usa = max(float(r["ratio"]) for r in usa)
@@ -73,29 +102,21 @@ jobs:
               if s >= 0.02: return "LOW RESONANCE"
               return "MINIMAL RESONANCE"
 
+          print("=" * 50)
+          print(f"V={V}  A={A}  D={D}  N={N}")
+          print(f"SRM = {SRM}  ->  {interpret(SRM)}")
+          print("=" * 50)
+
           result = {
               "symbol": "zelensky",
               "variables": {"V": V, "A": A, "D": D, "semantic_factor": round(sf,4), "N": N},
               "SRM": SRM,
-              "interpretation": interpret(SRM),
-              "generated_at": datetime.utcnow().isoformat() + "Z"
+              "interpretation": interpret(SRM)
           }
-
-          print("=" * 50)
-          print(f"V={V}  A={A}  D={D}  N={N}")
-          print(f"SRM = {SRM}  →  {interpret(SRM)}")
-          print("=" * 50)
-
           with open("SRM_zelensky_result.json", "w") as f:
               json.dump(result, f, indent=2)
-          print("Saved SRM_zelensky_result.json")
+          print("Saved: SRM_zelensky_result.json")
           PYEOF
-
-      - name: Run SRM Zelensky Validation
-        env:
-          SRM_A: ${{ github.event.inputs.A_value }}
-          SRM_D: ${{ github.event.inputs.D_value }}
-        run: python srm_zelensky_validation.py
 
       - name: Upload results
         uses: actions/upload-artifact@v4
