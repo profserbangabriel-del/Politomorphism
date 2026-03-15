@@ -42,3 +42,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: srm-results-orban
+          path: rezultate/
+          if-no-files-found: warn
