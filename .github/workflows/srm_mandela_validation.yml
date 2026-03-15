@@ -1,1 +1,44 @@
+name: SRM Validation Pipeline - Mandela
 
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: 'Symbol to analyze'
+        required: true
+        default: 'Nelson Mandela'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  srm_pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install packages
+        run: pip install vaderSentiment pandas numpy matplotlib scipy requests
+
+      - name: STEP 1 - Collect NYT data
+        env:
+          NYT_API_KEY: ${{ secrets.NYT_API_KEY }}
+        run: python srm_pipeline/mandela_collect.py
+
+      - name: STEP 3 - Semantic Drift D
+        run: python srm_pipeline/pas3_D_semantic_drift.py "${{ github.event.inputs.symbol }}"
+        continue-on-error: true
+
+      - name: STEP 5 - Final SRM Score
+        run: python srm_pipeline/pas5_SRM_mandela.py "${{ github.event.inputs.symbol }}"
+
+      - name: Save results
+        uses: actions/upload-artifact@v4
+        with:
+          name: srm-results-mandela
+          path: rezultate/
+          if-no-files-found: warn
