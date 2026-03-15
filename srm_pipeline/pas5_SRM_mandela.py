@@ -18,44 +18,66 @@ def load_json(path, default):
     return default
 
 pas3 = load_json('rezultate/pas3_semantic_drift.json', {"D": 0.320})
+D = pas3.get("D", 0.320)
 
-# Load data
+# Load CSV data
 baseline_path = 'data_mandela/mandela_baseline.csv'
 analysis_path = 'data_mandela/mandela_analysis.csv'
 titles_path = 'data_mandela/mandela_titles.csv'
+
+# Debug: list files
+print("Files in data_mandela/:")
+if os.path.exists('data_mandela'):
+    for f in os.listdir('data_mandela'):
+        size = os.path.getsize(f'data_mandela/{f}')
+        print(f"  {f} ({size} bytes)")
+else:
+    print("  data_mandela/ folder NOT FOUND")
+
+V = 0.920  # default
+N = 1.000  # default
+A = 0.520  # default
 
 if os.path.exists(baseline_path) and os.path.exists(analysis_path):
     df_b = pd.read_csv(baseline_path)
     df_a = pd.read_csv(analysis_path)
 
+    print(f"\nBaseline: {len(df_b)} months")
+    print(df_b.head())
+    print(f"\nAnalysis: {len(df_a)} months")
+    print(df_a.head())
+
     b_avg = df_b['count'].mean()
     a_avg = df_a['count'].mean()
-    escalation = a_avg / b_avg if b_avg > 0 else 1
-    V = min(1.0, math.log1p(escalation) / math.log1p(200))
+
+    if b_avg > 0:
+        escalation = a_avg / b_avg
+        V = min(1.0, math.log1p(escalation) / math.log1p(200))
+    else:
+        V = 0.920
 
     days_present = int((df_a['count'] > 0).sum())
-    N = days_present / len(df_a)
+    N = days_present / len(df_a) if len(df_a) > 0 else 1.0
 
-    print(f"Baseline avg: {b_avg:.1f} | Analysis avg: {a_avg:.1f}")
-    print(f"Escalation: {escalation:.2f}x → V={V:.4f}")
+    print(f"\nBaseline avg: {b_avg:.1f} | Analysis avg: {a_avg:.1f}")
+    print(f"Escalation: {a_avg/b_avg if b_avg > 0 else 'inf'}x → V={V:.4f}")
     print(f"N = {N:.4f} ({days_present}/{len(df_a)} months)")
 else:
-    print("CSV not found - using pre-computed values")
-    V = 0.920
-    N = 1.000
+    print(f"\nCSV not found — using pre-computed values V={V}, N={N}")
 
 # VADER on titles
-A = 0.520  # default
 if os.path.exists(titles_path):
     df_t = pd.read_csv(titles_path)
     titluri = df_t['title'].dropna().tolist()
+    print(f"\nVADER titles: {len(titluri)}")
     if titluri:
         analyzer = SentimentIntensityAnalyzer()
         scores = [abs(analyzer.polarity_scores(str(t))['compound']) for t in titluri]
         A = sum(scores) / len(scores)
-        print(f"VADER A = {A:.4f} on {len(titluri)} titles")
+        print(f"A = {A:.4f}")
+else:
+    print(f"Titles not found — using A={A}")
 
-D = pas3.get("D", 0.320)
 lam = 2
 semantic_factor = math.exp(-lam * D)
 SRM = V * A * semantic_factor * N
@@ -96,8 +118,10 @@ dataset = [
 dataset_sorted = sorted(dataset, key=lambda x: x[1])
 labels = [d[0] for d in dataset_sorted]
 values = [d[1] for d in dataset_sorted]
-colors = ['#FFD700' if 'Mandela' in d[0] else '#E8A09A' if d[1] < 0.07
-          else '#3498DB' if d[1] < 0.20 else '#27AE60' for d in dataset_sorted]
+colors = ['#FFD700' if 'Mandela' in d[0] else
+          '#27AE60' if d[1] >= 0.20 else
+          '#3498DB' if d[1] >= 0.07 else '#E8A09A'
+          for d in dataset_sorted]
 
 fig, ax = plt.subplots(figsize=(14, 6))
 fig.patch.set_facecolor('white')
@@ -105,18 +129,14 @@ bars = ax.bar(labels, values, color=colors, alpha=0.85, edgecolor='white', width
 for bar, val in zip(bars, values):
     ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.002,
             f'{val:.4f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
-
 ax.axhline(y=0.07, color='#E67E22', linewidth=1.5, linestyle='--', alpha=0.7)
 ax.axhline(y=0.20, color='#27AE60', linewidth=1.5, linestyle='--', alpha=0.7)
 ax.text(8.4, 0.072, 'Medium threshold', fontsize=8, color='#E67E22', ha='right')
 ax.text(8.4, 0.202, 'High threshold', fontsize=8, color='#27AE60', ha='right')
-
-ax.set_title(f'SRM Score — {symbol}\nNine-Symbol Comparative Dataset',
-             fontsize=12, fontweight='bold')
+ax.set_title(f'SRM Score — {symbol}\nNine-Symbol Comparative Dataset', fontsize=12, fontweight='bold')
 ax.set_ylabel('SRM Score', fontsize=10)
 ax.set_facecolor('#FAFAFA')
 ax.grid(axis='y', alpha=0.3, linestyle=':')
-
 legend_elements = [
     mpatches.Patch(color='#FFD700', label='Mandela (this study)'),
     mpatches.Patch(color='#E8A09A', label='Low Resonance'),
