@@ -40,5 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: srm-results-mandela
-          path: rezultate/
+          path: |
+            rezultate/
+            data_mandela/
           if-no-files-found: warn
