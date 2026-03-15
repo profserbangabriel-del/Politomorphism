@@ -1,0 +1,29 @@
+name: Fetch Google Trends Data
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch-trends:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pytrends pandas
+
+      - name: Run trends fetch script
+        run: python scripts/get_trends.py
+
+      - name: Upload results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trends-results
+          path: trends_results.csv
