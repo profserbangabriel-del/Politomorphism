@@ -156,8 +156,7 @@ Baseline: Jan 1, 2010 – Dec 31, 2022 (4,748 obs.) | Analysis: Jan 1, 2022 – 
 | 0.168 | 0.236 | 0.798 | 0.812 | 0.0065 | LOW RESONANCE |
 
 **Longevity Paradox:** 15+ years of media presence produces V=0.168 — structurally equivalent to Putin's acute pre-saturation. Chronic baseline dominance prevents symbolic emergence. **Peak:** April 3, 2022 — Hungarian parliamentary elections (4th consecutive victory, 2/3 majority).
-
-![SRM Orban Chart](data_orban/SRM_orban_chart.png)
+![SRM Orban Chart](data_orban/SRM_Orban_chart.png)
 
 Paper: [SRM_Orban_Validation.docx](SRM_Orban_Validation.docx) | Data: [data_orban/](data_orban/)
 
