@@ -56,9 +56,13 @@ Chronic long-term media presence prevents symbolic emergence. Example: **Viktor 
 ### 7. Legacy Resonance Symbol *(new — Case Study 9)*
 Acute death/memorial spike combined with near-universal semantic consensus suppresses SRM despite high V. Example: **Nelson Mandela (V=0.311, D=0.742, SRM=0.0088)**.
 
+### 8. Rapid Emergence Symbol *(new — Case Study 10)*
+Fast escalation from near-zero baseline suppressed by high Semantic Drift and low Affective Weight. Example: **Emmanuel Macron (V=0.507, D=0.810, A=0.168, SRM=0.0169)**.
+Acute death/memorial spike combined with near-universal semantic consensus suppresses SRM despite high V. Example: **Nelson Mandela (V=0.311, D=0.742, SRM=0.0088)**.
+
 ---
 
-## Comparative Dataset — 9 Validated Symbols
+## Comparative Dataset — 10 Validated Symbols
 
 | Symbol / Context | V | A | D | N | SRM | Category |
 |-----------------|---|---|---|---|-----|----------|
@@ -66,6 +70,7 @@ Acute death/memorial spike combined with near-universal semantic consensus suppr
 | Viktor Orbán (HU, 2022–26) | 0.168 | 0.236 | 0.798 | 0.812 | 0.0065 | Low — Longevity Saturation |
 | **Nelson Mandela (SA, 2013)** | **0.311** | **0.246** | **0.742** | **0.510** | **0.0088** | **Low — Legacy Resonance** |
 | Vladimir Putin (2022–26) | 0.217 | 0.259 | 0.847 | 1.000 | 0.0103 | Low — Pre-Saturated Contradicted |
+| **Emmanuel Macron (FR, 2017)** | **0.507** | **0.168** | **0.810** | **1.000** | **0.0169** | **Low — Rapid Emergence** |
 | Călin Georgescu (RO, 2024) | 0.750 | 0.398 | 0.881 | 0.600 | 0.0307 | Low — Fragmented Diffusion |
 | Marcel Ciolacu (RO, 2025–26) | 0.720 | 0.420 | 0.841 | 0.650 | 0.0365 | Low — Post-Executive Trap |
 | Sunflower Mvt (TW, 2014) | 0.680 | 0.420 | 0.774 | 0.580 | 0.0376 | Low — Fragmented Diffusion |
@@ -191,6 +196,32 @@ Paper: [SRM_Mandela_Validation.docx](SRM_Mandela_Validation.docx) | Data: [data_
 
 ---
 
+### Case Study 10 — Emmanuel Macron (France, 2017)
+
+Data: Media Cloud US National + Europe Media Monitor | 1,096 daily observations  
+Baseline: Jan 1, 2015 – Dec 31, 2016 (731 obs.) | avg 54.7 articles/day | avg ratio 0.000438  
+Analysis: Jan 1, 2017 – Dec 31, 2017 (365 obs.) | avg 866.5 articles/day | avg ratio 0.006027  
+VADER corpus: 1,304 English titles containing "macron" | Total articles: 79,964
+
+| V | A | D | N | SRM | Interpretation |
+|---|---|---|---|-----|----------------|
+| 0.507 | 0.168 | 0.810 | 1.000 | 0.0169 | LOW RESONANCE |
+
+**Rapid Emergence Paradox:** 13.75x escalation (highest V in Low Resonance cohort, V=0.5074) offset by low A=0.1681 (analytical framing of complex political project) and high D=0.810 (5 contradictory frames). **Peak:** May 7, 2017 — presidential election victory (ratio=0.072, 7,542 articles). **Eighth typology: Rapid Emergence Symbol.**
+
+**Peak events:**
+- May 7, 2017 — ratio=0.07227 (election victory, 7,542 articles)
+- May 8, 2017 — ratio=0.05278 (post-victory reactions, 8,639 articles — highest single day)
+- Apr 24, 2017 — ratio=0.04950 (first round results confirmed, 8,166 articles)
+- Apr 23, 2017 — ratio=0.04912 (election day first round)
+- May 14, 2017 — ratio=0.02809 (presidential inauguration)
+
+![SRM Macron Chart](data_macron/SRM_Macron_chart.png)
+
+Paper: [SRM_Macron_Validation.docx](SRM_Macron_Validation.docx) | Data: [data_macron/](data_macron/)
+
+---
+
 ## Repository Structure
 
 ```
@@ -214,6 +245,11 @@ politomorphism/
 │   ├── pas5_SRM_mandela.py
 │   ├── pas5_SRM_simion.py
 │   └── pas5_SRM_orban.py
+├── data_macron/
+│   ├── macron_baseline.csv
+│   ├── macron_analysis.csv
+│   ├── macron_titles.csv
+│   └── SRM_Macron_chart.png
 ├── data_mandela/
 │   ├── mandela_baseline.csv
 │   ├── mandela_analysis.csv

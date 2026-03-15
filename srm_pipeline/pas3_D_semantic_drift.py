@@ -71,6 +71,17 @@ drift_database = {
         ],
         "method": "Expert frame analysis"
     },
+    "Emmanuel Macron": {
+        "D": 0.810,
+        "frames": [
+            "Anti-establishment / centrist revolutionary (dominant frame, global liberal press)",
+            "Pro-EU savior / defender of European project (European and institutional press)",
+            "Former Rothschild banker / elitist establishment (conservative + left-wing media)",
+            "Empty centrist / macronism as ideological void (analytical press, commentators)",
+            "Anti-Le Pen barrier / democratic firewall (international electoral press)"
+        ],
+        "method": "Expert frame analysis - 5 concurrent contradictory frames"
+    },
     "Nelson Mandela": {
         "D": 0.742,
         "frames": [
