@@ -1,7 +1,3 @@
-"""
-pip install pytrends pandas
-python get_trends.py
-"""
 from pytrends.request import TrendReq
 import pandas as pd
 import time
@@ -19,9 +15,8 @@ queries = [
     ("calin georgescu",           "2024-10-01 2025-03-01"),
     ("marcel ciolacu",            "2025-01-01 2026-03-01"),
     ("sunflower movement taiwan", "2014-03-01 2014-06-01"),
-    ("hugo chavez",               "2001-01-01 2002-12-31"),
+    ("hugo chavez",               "2012-01-01 2013-12-31"),
 ]
-results = []
 
 results = []
 for term, timeframe in queries:
@@ -33,14 +28,14 @@ for term, timeframe in queries:
             peak = int(df[term].max())
         else:
             avg, peak = None, None
-        print(f"✓  {term:<35} avg={avg:<6} peak={peak}")
+        print(f"OK  {term:<35} avg={avg}  peak={peak}")
         results.append({"term": term, "period": timeframe, "avg": avg, "peak": peak})
     except Exception as e:
-        print(f"✗  {term:<35} ERROR: {e}")
+        print(f"ERR {term:<35} {e}")
         results.append({"term": term, "period": timeframe, "avg": None, "peak": None})
-    time.sleep(4)   # evită rate-limit
+    time.sleep(5)
 
 df_out = pd.DataFrame(results)
 df_out.to_csv("trends_results.csv", index=False)
-print("\nSalvat în trends_results.csv")
+print("\nSaved: trends_results.csv")
 print(df_out[["term","avg","peak"]].to_string(index=False))
