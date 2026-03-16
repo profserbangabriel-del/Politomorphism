@@ -1,0 +1,59 @@
+{
+  "symbol": "Hugo Chavez",
+  "context": "Venezuela 2002 \u2014 coup attempt + reversal (Apr 11-13)",
+  "case_study": 11,
+  "data_source": "GDELT Project (gdeltproject.org) \u2014 global news 2000-2002",
+  "framework_version": "Dual-Mode SRM v1.0 \u2014 Acute Event Window",
+  "periods": {
+    "baseline": "2000-01-01 to 2002-03-31",
+    "sustained": "2002-04-01 to 2002-12-31",
+    "acute_window": "2002-04-11 to 2002-04-20 (10 days)"
+  },
+  "sustained_mode": {
+    "V": 0.5953,
+    "A": 0.62,
+    "D": 0.62,
+    "N": 0.65,
+    "SRM_lambda2": 0.0694,
+    "class_lambda2": "LOW RESONANCE",
+    "SRM_lambda7": 0.0031,
+    "class_lambda7": "LOW RESONANCE",
+    "formula": "SRM = 0.5953 x 0.62 x e^(-2x0.62) x 0.6500"
+  },
+  "acute_mode": {
+    "V": 0.9802,
+    "A": 0.75,
+    "D": 0.28,
+    "N": 1.0,
+    "SRM_lambda2": 0.4199,
+    "class_lambda2": "HIGH RESONANCE",
+    "SRM_lambda7": 0.1036,
+    "class_lambda7": "MEDIUM RESONANCE",
+    "formula": "SRM = 0.9802 x 0.75 x e^(-2x0.28) x 1.0000",
+    "note": "D=0.280 reflects single dominant narrative during coup window"
+  },
+  "key_events": [
+    {
+      "date": "2002-04-11",
+      "event": "Military coup \u2014 Chavez ousted, Carmona installed"
+    },
+    {
+      "date": "2002-04-12",
+      "event": "Carmona dissolves National Assembly \u2014 international shock"
+    },
+    {
+      "date": "2002-04-13",
+      "event": "Loyalist military reversal \u2014 Chavez restored"
+    },
+    {
+      "date": "2002-04-14",
+      "event": "Return to Miraflores Palace \u2014 global peak coverage"
+    },
+    {
+      "date": "2002-12-02",
+      "event": "General strike \u2014 PDVSA oil stoppage begins"
+    }
+  ],
+  "dual_mode_finding": "HIGH RESONANCE is structurally impossible in SUSTAINED analysis (D cannot fall below 0.09 over months). It is achievable in ACUTE EVENT WINDOW analysis (D=0.28 during 10-day coup window) where a single narrative dominates. Chavez ACUTE SRM(lambda=2)=0.4199 = HIGH RESONANCE.",
+  "typology": "Revolutionary Reversal Symbol \u2014 first Acute Event Window validation"
+}

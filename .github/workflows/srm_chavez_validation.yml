@@ -1,0 +1,41 @@
+name: SRM Validation Pipeline — Hugo Chavez (Acute Event Window)
+
+on:
+  workflow_dispatch:
+    inputs:
+      lambda:
+        description: 'Lambda value (2=standard, 7=empirical)'
+        required: false
+        default: '2'
+      mode:
+        description: 'acute or sustained'
+        required: false
+        default: 'acute'
+
+jobs:
+  srm-chavez:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install pandas numpy matplotlib scipy requests vaderSentiment
+      - name: Create data directory
+        run: mkdir -p data_chavez
+      - name: Fetch data from GDELT
+        run: python scripts/fetch_chavez_gdelt.py
+      - name: Run SRM pipeline
+        env:
+          SRM_LAMBDA: ${{ github.event.inputs.lambda }}
+          SRM_MODE: ${{ github.event.inputs.mode }}
+        run: python srm_pipeline/srm_chavez_validation.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: srm-chavez-results
+          path: |
+            data_chavez/SRM_chavez_result.json
+            data_chavez/SRM_chavez_chart.png
+            data_chavez/SRM_chavez_acute_chart.png
+            data_chavez/chavez_gdelt_data.csv
