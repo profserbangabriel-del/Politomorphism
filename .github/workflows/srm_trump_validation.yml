@@ -5,7 +5,7 @@ on:
   push:
     paths:
       - 'srm_trump_engine.py'
-      - 'TRUMP+DATA.csv'
+      - 'TRUMP-DATA.csv'
 
 jobs:
   run-srm-trump:
