@@ -32,9 +32,9 @@ on:
         required: false
         default: '0.5'
       bootstrap:
-        description: 'Bootstrap samples (default=200 for CI speed)'
+        description: 'Bootstrap samples (20 for speed, 200 for publication)'
         required: false
-        default: '200'
+        default: '20'
 
 jobs:
   compute-D:
