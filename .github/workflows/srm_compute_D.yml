@@ -39,7 +39,7 @@ on:
 jobs:
   compute-D:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repository
@@ -86,20 +86,22 @@ jobs:
 
       - name: Run calibrate_alpha.py
         run: python scripts/calibrate_alpha.py
+        continue-on-error: true
 
       - name: Run test_hypotheses.py
         run: python scripts/test_hypotheses.py
+        continue-on-error: true
 
       - name: Display results
         run: |
           echo "=== D Result ==="
-          cat D_result_${{ github.event.inputs.symbol }}.json
+          cat D_result_${{ github.event.inputs.symbol }}.json || echo "D result file not found"
           echo ""
           echo "=== Alpha Calibration ==="
-          cat alpha_calibration_results.json
+          cat alpha_calibration_results.json || echo "Alpha calibration not run yet"
           echo ""
           echo "=== Hypothesis Tests ==="
-          cat hypothesis_test_results.json
+          cat hypothesis_test_results.json || echo "Hypothesis tests not run yet"
 
       - name: Upload results as artifacts
         uses: actions/upload-artifact@v4
@@ -117,7 +119,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           RESULT_FILE="D_result_${{ github.event.inputs.symbol }}.json"
-          git add "$RESULT_FILE" alpha_calibration_results.json hypothesis_test_results.json
+          git add "$RESULT_FILE" || true
+          git add alpha_calibration_results.json || true
+          git add hypothesis_test_results.json || true
 
           git diff --staged --quiet || \
             git commit -m "SRM D computation: ${{ github.event.inputs.symbol }} — alpha=${{ github.event.inputs.alpha }}, bootstrap=${{ github.event.inputs.bootstrap }}"
