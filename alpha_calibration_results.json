@@ -3,7 +3,7 @@
     "Sunflower Movement": "structural estimate (fallback)",
     "Călin Georgescu": "structural estimate (fallback)",
     "Marcel Ciolacu": "structural estimate (fallback)",
-    "Donald Trump": "structural estimate (fallback)",
+    "Donald Trump": "compute_D.py (real)",
     "Volodymyr Zelensky": "structural estimate (fallback)",
     "Vladimir Putin": "structural estimate (fallback)",
     "George Simion": "structural estimate (fallback)",
@@ -13,24 +13,34 @@
     "Hugo Chávez (sust.)": "structural estimate (fallback)",
     "Hugo Chávez (acute)": "structural estimate (fallback)"
   },
-  "real_values_count": 0,
+  "real_values_count": 1,
   "total_cases": 12,
   "global_calibration": {
-    "alpha_optimal": 0.351,
-    "RMSE_at_alpha_opt": 0.0117,
-    "MAE_at_alpha_opt": 0.0103,
-    "RMSE_at_alpha_05": 0.0233,
-    "MAE_at_alpha_05": 0.013,
-    "pearson_r": 0.9961,
+    "alpha_optimal": 0.3481,
+    "RMSE_at_alpha_opt": 0.0113,
+    "MAE_at_alpha_opt": 0.0097,
+    "RMSE_at_alpha_05": 0.0267,
+    "MAE_at_alpha_05": 0.0164,
+    "pearson_r": 0.9966,
     "pearson_p": 0.0,
     "spearman_r": 0.979,
     "spearman_p": 0.0,
-    "verdict": "Consider updating to alpha=0.351"
+    "verdict": "Consider updating to alpha=0.3481"
   },
   "typology_calibration": {
-    "Civic Mobilization": {
-      "n": 1,
-      "note": "Insufficient cases (n<2)"
+    "Institutionally Durable": {
+      "n": 3,
+      "cases": [
+        "Volodymyr Zelensky",
+        "Vladimir Putin",
+        "Viktor Orbán"
+      ],
+      "alpha_optimal": 0.4526,
+      "RMSE": 0.0039,
+      "PE_mean": 0.74,
+      "ICI_mean": 0.8,
+      "D_legacy_mean": 0.775,
+      "interpretation": "Balanced"
     },
     "Electorally Volatile": {
       "n": 5,
@@ -48,19 +58,13 @@
       "D_legacy_mean": 0.6928,
       "interpretation": "Balanced"
     },
-    "Institutionally Durable": {
-      "n": 3,
-      "cases": [
-        "Volodymyr Zelensky",
-        "Vladimir Putin",
-        "Viktor Orbán"
-      ],
-      "alpha_optimal": 0.4526,
-      "RMSE": 0.0039,
-      "PE_mean": 0.74,
-      "ICI_mean": 0.8,
-      "D_legacy_mean": 0.775,
-      "interpretation": "Balanced"
+    "Flash Viral": {
+      "n": 1,
+      "note": "Insufficient cases (n<2)"
+    },
+    "Civic Mobilization": {
+      "n": 1,
+      "note": "Insufficient cases (n<2)"
     },
     "Campaign/Ascension": {
       "n": 2,
@@ -68,16 +72,12 @@
         "Marcel Ciolacu",
         "Donald Trump"
       ],
-      "alpha_optimal": 0.419,
-      "RMSE": 0.0055,
-      "PE_mean": 0.765,
-      "ICI_mean": 0.795,
+      "alpha_optimal": 0.35,
+      "RMSE": 0.003,
+      "PE_mean": 0.6612,
+      "ICI_mean": 0.8576,
       "D_legacy_mean": 0.7875,
       "interpretation": "Balanced"
-    },
-    "Flash Viral": {
-      "n": 1,
-      "note": "Insufficient cases (n<2)"
     }
   },
   "per_case_decomposition": [
@@ -118,12 +118,12 @@
       "symbol": "Donald Trump",
       "typology": "Campaign/Ascension",
       "D_legacy": 0.734,
-      "PE": 0.75,
-      "ICI": 0.71,
-      "D_new": 0.73,
-      "delta": -0.004,
-      "dominant": "PE",
-      "data_source": "structural estimate (fallback)"
+      "PE": 0.5423,
+      "ICI": 0.8351,
+      "D_new": 0.6887,
+      "delta": -0.0453,
+      "dominant": "ICI",
+      "data_source": "compute_D.py (real)"
     },
     {
       "symbol": "Volodymyr Zelensky",
@@ -222,7 +222,7 @@
     "flash_ICI_mean": 0.97,
     "flash_PE_mean": 0.65,
     "flash_ICI_PE_ratio": 1.4923,
-    "nonflash_ICI_PE_ratio": 1.1353,
+    "nonflash_ICI_PE_ratio": 1.1893,
     "supported": true
   }
 }
