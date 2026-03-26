@@ -75,7 +75,7 @@ jobs:
           pip install --upgrade pip
           pip install scikit-learn scipy numpy sentence-transformers mediacloud
 
-      # ── NOU: fetch automat dacă csv_path e gol ──────────────────────────
+      # ── fetch automat dacă csv_path e gol ───────────────────────────────
       - name: Fetch data from Media Cloud
         if: ${{ github.event.inputs.csv_path == '' }}
         env:
@@ -126,12 +126,12 @@ jobs:
           else
             echo "csv=${{ github.event.inputs.symbol }}-DATA.csv" >> $GITHUB_OUTPUT
           fi
-      # ────────────────────────────────────────────────────────────────────
 
+      # ── FIX: ghilimelele duble eliminate din jurul symbol ────────────────
       - name: Run compute_D.py
         run: |
           ARGS="--csv ${{ steps.resolve_csv.outputs.csv }} \
-                --symbol \"${{ github.event.inputs.symbol }}\" \
+                --symbol ${{ github.event.inputs.symbol }} \
                 --alpha ${{ github.event.inputs.alpha }} \
                 --bootstrap ${{ github.event.inputs.bootstrap }} \
                 --lam ${{ github.event.inputs.lam }} \
