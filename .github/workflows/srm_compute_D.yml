@@ -8,9 +8,21 @@ on:
         required: true
         default: 'Trump'
       csv_path:
-        description: 'Path to Media Cloud CSV (relative to repo root)'
-        required: true
-        default: 'TRUMP-DATA.csv'
+        description: 'Path to Media Cloud CSV (relative to repo root) — lăsat gol = fetch automat'
+        required: false
+        default: ''
+      mediacloud_query:
+        description: 'Query Media Cloud (ex: "Ciolacu") — folosit doar dacă csv_path e gol'
+        required: false
+        default: ''
+      mediacloud_start:
+        description: 'Data start fetch (YYYY-MM-DD)'
+        required: false
+        default: '2024-01-01'
+      mediacloud_end:
+        description: 'Data end fetch (YYYY-MM-DD)'
+        required: false
+        default: '2024-12-31'
       V:
         description: 'Viral Velocity'
         required: false
@@ -61,26 +73,73 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install scikit-learn scipy numpy sentence-transformers
+          pip install scikit-learn scipy numpy sentence-transformers mediacloud
+
+      # ── NOU: fetch automat dacă csv_path e gol ──────────────────────────
+      - name: Fetch data from Media Cloud
+        if: ${{ github.event.inputs.csv_path == '' }}
+        env:
+          MEDIACLOUD_API_KEY: ${{ secrets.MEDIACLOUD_API_KEY }}
+        run: |
+          python - <<'EOF'
+          import mediacloud.api, csv, os, sys
+
+          query   = "${{ github.event.inputs.mediacloud_query }}" or "${{ github.event.inputs.symbol }}"
+          start   = "${{ github.event.inputs.mediacloud_start }}"
+          end     = "${{ github.event.inputs.mediacloud_end }}"
+          out_csv = "${{ github.event.inputs.symbol }}-DATA.csv"
+
+          mc = mediacloud.api.SearchApi(os.environ["MEDIACLOUD_API_KEY"])
+
+          stories, token = [], None
+          while True:
+              page, token = mc.story_list(query, start_date=start, end_date=end,
+                                          pagination_token=token, page_size=1000)
+              stories.extend(page)
+              print(f"  fetched {len(stories)} stories so far…", flush=True)
+              if not token:
+                  break
+
+          if not stories:
+              print("EROARE: niciun articol găsit pentru query-ul dat.", file=sys.stderr)
+              sys.exit(1)
+
+          with open(out_csv, "w", newline="", encoding="utf-8") as f:
+              writer = csv.DictWriter(f, fieldnames=["publish_date","title","url","media_name"])
+              writer.writeheader()
+              for s in stories:
+                  writer.writerow({
+                      "publish_date": s.get("publish_date",""),
+                      "title":        s.get("title",""),
+                      "url":          s.get("url",""),
+                      "media_name":   s.get("media_name",""),
+                  })
+
+          print(f"Salvat {len(stories)} articole în {out_csv}")
+          EOF
+
+      - name: Resolve csv_path
+        id: resolve_csv
+        run: |
+          if [ -n "${{ github.event.inputs.csv_path }}" ]; then
+            echo "csv=${{ github.event.inputs.csv_path }}" >> $GITHUB_OUTPUT
+          else
+            echo "csv=${{ github.event.inputs.symbol }}-DATA.csv" >> $GITHUB_OUTPUT
+          fi
+      # ────────────────────────────────────────────────────────────────────
 
       - name: Run compute_D.py
         run: |
-          ARGS="--csv ${{ github.event.inputs.csv_path }} \
+          ARGS="--csv ${{ steps.resolve_csv.outputs.csv }} \
                 --symbol \"${{ github.event.inputs.symbol }}\" \
                 --alpha ${{ github.event.inputs.alpha }} \
                 --bootstrap ${{ github.event.inputs.bootstrap }} \
                 --lam ${{ github.event.inputs.lam }} \
                 --out D_result_${{ github.event.inputs.symbol }}.json"
 
-          if [ -n "${{ github.event.inputs.V }}" ]; then
-            ARGS="$ARGS --V ${{ github.event.inputs.V }}"
-          fi
-          if [ -n "${{ github.event.inputs.A }}" ]; then
-            ARGS="$ARGS --A ${{ github.event.inputs.A }}"
-          fi
-          if [ -n "${{ github.event.inputs.N }}" ]; then
-            ARGS="$ARGS --N ${{ github.event.inputs.N }}"
-          fi
+          if [ -n "${{ github.event.inputs.V }}" ]; then ARGS="$ARGS --V ${{ github.event.inputs.V }}"; fi
+          if [ -n "${{ github.event.inputs.A }}" ]; then ARGS="$ARGS --A ${{ github.event.inputs.A }}"; fi
+          if [ -n "${{ github.event.inputs.N }}" ]; then ARGS="$ARGS --N ${{ github.event.inputs.N }}"; fi
 
           python scripts/compute_D.py $ARGS
 
@@ -96,10 +155,8 @@ jobs:
         run: |
           echo "=== D Result ==="
           cat D_result_${{ github.event.inputs.symbol }}.json || echo "D result file not found"
-          echo ""
           echo "=== Alpha Calibration ==="
           cat alpha_calibration_results.json || echo "Alpha calibration not run yet"
-          echo ""
           echo "=== Hypothesis Tests ==="
           cat hypothesis_test_results.json || echo "Hypothesis tests not run yet"
 
@@ -111,6 +168,7 @@ jobs:
             D_result_${{ github.event.inputs.symbol }}.json
             alpha_calibration_results.json
             hypothesis_test_results.json
+            ${{ github.event.inputs.symbol }}-DATA.csv
           retention-days: 90
 
       - name: Commit results to repository
@@ -118,10 +176,10 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          RESULT_FILE="D_result_${{ github.event.inputs.symbol }}.json"
-          git add "$RESULT_FILE" || true
+          git add "D_result_${{ github.event.inputs.symbol }}.json" || true
           git add alpha_calibration_results.json || true
           git add hypothesis_test_results.json || true
+          git add "${{ github.event.inputs.symbol }}-DATA.csv" || true
 
           git diff --staged --quiet || \
             git commit -m "SRM D computation: ${{ github.event.inputs.symbol }} — alpha=${{ github.event.inputs.alpha }}, bootstrap=${{ github.event.inputs.bootstrap }}"
