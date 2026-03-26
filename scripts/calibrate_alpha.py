@@ -15,22 +15,25 @@ from scipy.stats import pearsonr, spearmanr
 
 
 # ── DATASET (fallback — estimări structurale) ─────────────────────────────────
+# Coloana json_symbol = valoarea exactă din --symbol când ai rulat compute_D.py
 CASES_FALLBACK = [
-    ("Sunflower Movement",   0.774,  0.72,  0.83,  None,   "Civic Mobilization"),
-    ("Călin Georgescu",      0.881,  0.65,  0.97,  65.33,  "Flash Viral"),
-    ("Marcel Ciolacu",       0.841,  0.78,  0.88,  6.57,   "Campaign/Ascension"),
-    ("Donald Trump",         0.734,  0.75,  0.71,  7.01,   "Campaign/Ascension"),
-    ("Volodymyr Zelensky",   0.680,  0.60,  0.74,  5.11,   "Institutionally Durable"),
-    ("Vladimir Putin",       0.847,  0.80,  0.89,  4.90,   "Institutionally Durable"),
-    ("George Simion",        0.812,  0.70,  0.86,  12.41,  "Electorally Volatile"),
-    ("Viktor Orbán",         0.798,  0.82,  0.77,  2.31,   "Institutionally Durable"),
-    ("Nelson Mandela",       0.742,  0.68,  0.79,  19.66,  "Electorally Volatile"),
-    ("Emmanuel Macron",      0.810,  0.77,  0.84,  12.53,  "Electorally Volatile"),
-    ("Hugo Chávez (sust.)",  0.720,  0.71,  0.73,  16.67,  "Electorally Volatile"),
-    ("Hugo Chávez (acute)",  0.380,  0.30,  0.44,  16.67,  "Electorally Volatile"),
+    # name,                  D_legacy,  PE_est,  ICI_est,  lam,    typology,                   json_symbol
+    ("Sunflower Movement",   0.774,     0.72,    0.83,     None,   "Civic Mobilization",       "Sunflower Movement"),
+    ("Călin Georgescu",      0.881,     0.65,    0.97,     65.33,  "Flash Viral",              "Georgescu"),
+    ("Marcel Ciolacu",       0.841,     0.78,    0.88,     6.57,   "Campaign/Ascension",       "Ciolacu"),
+    ("Donald Trump",         0.734,     0.75,    0.71,     7.01,   "Campaign/Ascension",       "Trump"),
+    ("Volodymyr Zelensky",   0.680,     0.60,    0.74,     5.11,   "Institutionally Durable",  "Zelensky"),
+    ("Vladimir Putin",       0.847,     0.80,    0.89,     4.90,   "Institutionally Durable",  "Putin"),
+    ("George Simion",        0.812,     0.70,    0.86,     12.41,  "Electorally Volatile",     "Simion"),
+    ("Viktor Orbán",         0.798,     0.82,    0.77,     2.31,   "Institutionally Durable",  "Orban"),
+    ("Nelson Mandela",       0.742,     0.68,    0.79,     19.66,  "Electorally Volatile",     "Mandela"),
+    ("Emmanuel Macron",      0.810,     0.77,    0.84,     12.53,  "Electorally Volatile",     "Macron"),
+    ("Hugo Chávez (sust.)",  0.720,     0.71,    0.73,     16.67,  "Electorally Volatile",     "Chavez"),
+    ("Hugo Chávez (acute)",  0.380,     0.30,    0.44,     16.67,  "Electorally Volatile",     "Chavez_acute"),
 ]
 
-FALLBACK_BY_NAME = {c[0]: c for c in CASES_FALLBACK}
+FALLBACK_BY_NAME     = {c[0]: c for c in CASES_FALLBACK}
+FALLBACK_BY_JSON_SYM = {c[6]: c for c in CASES_FALLBACK}
 
 
 # ── LOAD REAL VALUES FROM compute_D.py OUTPUT ────────────────────────────────
@@ -38,8 +41,8 @@ FALLBACK_BY_NAME = {c[0]: c for c in CASES_FALLBACK}
 def load_real_values():
     """
     Scanează toate D_result_*.json din directorul curent.
-    FIX: citește din data["D_result"] (nested), nu de la rădăcină.
-    FIX: curăță ghilimelele extra din symbol (bug vechi workflow).
+    FIX 1: citește din data["D_result"] (nested), nu de la rădăcină.
+    FIX 2: curăță ghilimelele extra din symbol (bug vechi workflow).
     """
     real = {}
     for path in glob.glob("D_result_*.json"):
@@ -49,22 +52,22 @@ def load_real_values():
 
             symbol = data.get("symbol") or data.get("name")
 
-            # FIX: valorile sunt în data["D_result"], nu la rădăcină
+            # FIX 1: valorile sunt în data["D_result"], nu la rădăcină
             inner = data.get("D_result", data)
 
             pe  = inner.get("PE")  or inner.get("pe")
             ici = inner.get("ICI") or inner.get("ici")
             d   = inner.get("D")   or inner.get("D_new") or inner.get("d")
 
-            # FIX: curăță ghilimelele extra din symbol (bug vechi workflow)
+            # FIX 2: curăță ghilimelele extra
             if symbol:
                 symbol = symbol.strip().strip('"')
 
             if symbol and pe is not None and ici is not None:
                 real[symbol] = {
-                    "PE":   float(pe),
-                    "ICI":  float(ici),
-                    "D":    float(d) if d is not None else None,
+                    "PE":    float(pe),
+                    "ICI":   float(ici),
+                    "D":     float(d) if d is not None else None,
                     "_norm": symbol.lower().strip()
                 }
                 print(f"  ✓ {symbol}: PE={pe}, ICI={ici}, D={d}  [{path}]")
@@ -74,12 +77,22 @@ def load_real_values():
 
 
 def find_real(real: dict, name: str):
-    """Match exact, apoi normalizat — robust față de variații de majuscule."""
+    """
+    Match în trei trepte:
+    1. Exact
+    2. Normalizat (lowercase, strip)
+    3. Parțial (name conținut în cheie sau invers)
+    """
+    if not name:
+        return None
     if name in real:
         return real[name]
     norm = name.lower().strip()
     for v in real.values():
         if v.get("_norm") == norm:
+            return v
+    for k, v in real.items():
+        if norm in k.lower() or k.lower() in norm:
             return v
     return None
 
@@ -87,7 +100,7 @@ def find_real(real: dict, name: str):
 def build_dataset():
     """
     Combină valorile reale (din JSON) cu fallback-urile hardcodate.
-    Returnează arrays NAMES, D_legacy, PE, ICI, LAMBDAS, TYPES + metadata surse.
+    FIX 3: matching folosește json_symbol (coloana 7) înainte de name.
     """
     real = load_real_values()
     sources = {}
@@ -95,9 +108,11 @@ def build_dataset():
     names, d_leg, pe_arr, ici_arr, lambdas, types = [], [], [], [], [], []
 
     for c in CASES_FALLBACK:
-        name, d_legacy, pe_est, ici_est, lam, typ = c
+        name, d_legacy, pe_est, ici_est, lam, typ, json_sym = c
 
-        match = find_real(real, name)
+        # Încearcă json_symbol primul, apoi name complet
+        match = find_real(real, json_sym) or find_real(real, name)
+
         if match:
             pe  = match["PE"]
             ici = match["ICI"]
@@ -115,9 +130,8 @@ def build_dataset():
         types.append(typ)
         sources[name] = src
 
-    # Simboluri noi din JSON care nu sunt în CASES_FALLBACK
-    for sym, vals in real.items():
-        if sym not in FALLBACK_BY_NAME:
+    for sym in real:
+        if sym not in FALLBACK_BY_JSON_SYM and sym not in FALLBACK_BY_NAME:
             print(f"  ℹ '{sym}' găsit în JSON dar nu în CASES_FALLBACK — omis din calibrare")
 
     return (names,
