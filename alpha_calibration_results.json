@@ -1,6 +1,6 @@
 {
   "data_sources": {
-    "Sunflower Movement": "structural estimate (fallback)",
+    "Sunflower Movement": "compute_D.py (real)",
     "Călin Georgescu": "compute_D.py (real)",
     "Marcel Ciolacu": "compute_D.py (real)",
     "Donald Trump": "compute_D.py (real)",
@@ -13,55 +13,21 @@
     "Hugo Chávez (sust.)": "structural estimate (fallback)",
     "Hugo Chávez (acute)": "structural estimate (fallback)"
   },
-  "real_values_count": 3,
+  "real_values_count": 4,
   "total_cases": 12,
   "global_calibration": {
-    "alpha_optimal": 0.1945,
-    "RMSE_at_alpha_opt": 0.0722,
-    "MAE_at_alpha_opt": 0.048,
-    "RMSE_at_alpha_05": 0.083,
-    "MAE_at_alpha_05": 0.0422,
-    "pearson_r": 0.8239,
-    "pearson_p": 0.001,
-    "spearman_r": 0.4056,
-    "spearman_p": 0.1908,
-    "verdict": "Consider updating to alpha=0.1945"
+    "alpha_optimal": 0.1663,
+    "RMSE_at_alpha_opt": 0.0715,
+    "MAE_at_alpha_opt": 0.0481,
+    "RMSE_at_alpha_05": 0.0852,
+    "MAE_at_alpha_05": 0.0477,
+    "pearson_r": 0.8268,
+    "pearson_p": 0.0009,
+    "spearman_r": 0.3706,
+    "spearman_p": 0.2356,
+    "verdict": "Consider updating to alpha=0.1663"
   },
   "typology_calibration": {
-    "Electorally Volatile": {
-      "n": 5,
-      "cases": [
-        "George Simion",
-        "Nelson Mandela",
-        "Emmanuel Macron",
-        "Hugo Chávez (sust.)",
-        "Hugo Chávez (acute)"
-      ],
-      "alpha_optimal": 0.378,
-      "RMSE": 0.0073,
-      "PE_mean": 0.632,
-      "ICI_mean": 0.732,
-      "D_legacy_mean": 0.6928,
-      "interpretation": "Balanced"
-    },
-    "Civic Mobilization": {
-      "n": 1,
-      "note": "Insufficient cases (n<2)"
-    },
-    "Institutionally Durable": {
-      "n": 3,
-      "cases": [
-        "Volodymyr Zelensky",
-        "Vladimir Putin",
-        "Viktor Orbán"
-      ],
-      "alpha_optimal": 0.4526,
-      "RMSE": 0.0039,
-      "PE_mean": 0.74,
-      "ICI_mean": 0.8,
-      "D_legacy_mean": 0.775,
-      "interpretation": "Balanced"
-    },
     "Flash Viral": {
       "n": 1,
       "note": "Insufficient cases (n<2)"
@@ -78,6 +44,40 @@
       "ICI_mean": 0.7898,
       "D_legacy_mean": 0.7875,
       "interpretation": "ICI-dominant"
+    },
+    "Institutionally Durable": {
+      "n": 3,
+      "cases": [
+        "Volodymyr Zelensky",
+        "Vladimir Putin",
+        "Viktor Orbán"
+      ],
+      "alpha_optimal": 0.4526,
+      "RMSE": 0.0039,
+      "PE_mean": 0.74,
+      "ICI_mean": 0.8,
+      "D_legacy_mean": 0.775,
+      "interpretation": "Balanced"
+    },
+    "Civic Mobilization": {
+      "n": 1,
+      "note": "Insufficient cases (n<2)"
+    },
+    "Electorally Volatile": {
+      "n": 5,
+      "cases": [
+        "George Simion",
+        "Nelson Mandela",
+        "Emmanuel Macron",
+        "Hugo Chávez (sust.)",
+        "Hugo Chávez (acute)"
+      ],
+      "alpha_optimal": 0.378,
+      "RMSE": 0.0073,
+      "PE_mean": 0.632,
+      "ICI_mean": 0.732,
+      "D_legacy_mean": 0.6928,
+      "interpretation": "Balanced"
     }
   },
   "per_case_decomposition": [
@@ -85,12 +85,12 @@
       "symbol": "Sunflower Movement",
       "typology": "Civic Mobilization",
       "D_legacy": 0.774,
-      "PE": 0.72,
-      "ICI": 0.83,
-      "D_new": 0.775,
-      "delta": 0.001,
+      "PE": 0.6248,
+      "ICI": 0.7894,
+      "D_new": 0.7071,
+      "delta": -0.0669,
       "dominant": "ICI",
-      "data_source": "structural estimate (fallback)"
+      "data_source": "compute_D.py (real)"
     },
     {
       "symbol": "Călin Georgescu",
@@ -222,7 +222,7 @@
     "flash_ICI_mean": 0.7004,
     "flash_PE_mean": 0.5949,
     "flash_ICI_PE_ratio": 1.1773,
-    "nonflash_ICI_PE_ratio": 1.1956,
+    "nonflash_ICI_PE_ratio": 1.2056,
     "supported": false
   }
 }
