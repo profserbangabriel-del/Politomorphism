@@ -75,37 +75,44 @@ jobs:
           pip install --upgrade pip
           pip install scikit-learn scipy numpy sentence-transformers mediacloud
 
-      # ── FIX: date.fromisoformat() pentru API Media Cloud ─────────────────
+      # ── FIX: date.fromisoformat() + retry logic + delay ─────────────────
       - name: Fetch data from Media Cloud
         if: ${{ github.event.inputs.csv_path == '' }}
         env:
           MEDIACLOUD_API_KEY: ${{ secrets.MEDIACLOUD_API_KEY }}
         run: |
           python - <<'EOF'
-          import mediacloud.api, csv, os, sys
+          import mediacloud.api, csv, os, sys, time
           from datetime import date
 
-          query   = "${{ github.event.inputs.mediacloud_query }}" or "${{ github.event.inputs.symbol }}"
-          start   = "${{ github.event.inputs.mediacloud_start }}"
-          end     = "${{ github.event.inputs.mediacloud_end }}"
-          out_csv = "${{ github.event.inputs.symbol }}-DATA.csv"
-
-          start_date = date.fromisoformat(start)
-          end_date   = date.fromisoformat(end)
+          query      = "${{ github.event.inputs.mediacloud_query }}" or "${{ github.event.inputs.symbol }}"
+          start_date = date.fromisoformat("${{ github.event.inputs.mediacloud_start }}")
+          end_date   = date.fromisoformat("${{ github.event.inputs.mediacloud_end }}")
+          out_csv    = "${{ github.event.inputs.symbol }}-DATA.csv"
 
           mc = mediacloud.api.SearchApi(os.environ["MEDIACLOUD_API_KEY"])
 
-          stories, token = [], None
+          stories, token, retries = [], None, 0
           while True:
-              page, token = mc.story_list(query, start_date=start_date, end_date=end_date,
-                                          pagination_token=token, page_size=1000)
-              stories.extend(page)
-              print(f"  fetched {len(stories)} stories so far…", flush=True)
-              if not token:
-                  break
+              try:
+                  page, token = mc.story_list(query, start_date=start_date, end_date=end_date,
+                                              pagination_token=token, page_size=1000)
+                  stories.extend(page)
+                  print(f"  fetched {len(stories)} stories so far…", flush=True)
+                  retries = 0
+                  time.sleep(1)
+                  if not token:
+                      break
+              except Exception as e:
+                  retries += 1
+                  print(f"  ⚠ Eroare pagină (retry {retries}/3): {e}", flush=True)
+                  if retries >= 3:
+                      print(f"  Oprire după 3 retry-uri. Salvez {len(stories)} articole.", flush=True)
+                      break
+                  time.sleep(5)
 
           if not stories:
-              print("EROARE: niciun articol găsit pentru query-ul dat.", file=sys.stderr)
+              print("EROARE: niciun articol găsit.", file=sys.stderr)
               sys.exit(1)
 
           with open(out_csv, "w", newline="", encoding="utf-8") as f:
