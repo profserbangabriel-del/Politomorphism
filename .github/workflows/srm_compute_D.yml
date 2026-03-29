@@ -75,7 +75,7 @@ jobs:
           pip install --upgrade pip
           pip install scikit-learn scipy numpy sentence-transformers mediacloud
 
-      # ── fetch automat dacă csv_path e gol ───────────────────────────────
+      # ── FIX: date.fromisoformat() pentru API Media Cloud ─────────────────
       - name: Fetch data from Media Cloud
         if: ${{ github.event.inputs.csv_path == '' }}
         env:
@@ -83,17 +83,21 @@ jobs:
         run: |
           python - <<'EOF'
           import mediacloud.api, csv, os, sys
+          from datetime import date
 
           query   = "${{ github.event.inputs.mediacloud_query }}" or "${{ github.event.inputs.symbol }}"
           start   = "${{ github.event.inputs.mediacloud_start }}"
           end     = "${{ github.event.inputs.mediacloud_end }}"
           out_csv = "${{ github.event.inputs.symbol }}-DATA.csv"
 
+          start_date = date.fromisoformat(start)
+          end_date   = date.fromisoformat(end)
+
           mc = mediacloud.api.SearchApi(os.environ["MEDIACLOUD_API_KEY"])
 
           stories, token = [], None
           while True:
-              page, token = mc.story_list(query, start_date=start, end_date=end,
+              page, token = mc.story_list(query, start_date=start_date, end_date=end_date,
                                           pagination_token=token, page_size=1000)
               stories.extend(page)
               print(f"  fetched {len(stories)} stories so far…", flush=True)
@@ -127,7 +131,6 @@ jobs:
             echo "csv=${{ github.event.inputs.symbol }}-DATA.csv" >> $GITHUB_OUTPUT
           fi
 
-      # ── FIX: ghilimelele duble eliminate din jurul symbol ────────────────
       - name: Run compute_D.py
         run: |
           ARGS="--csv ${{ steps.resolve_csv.outputs.csv }} \
