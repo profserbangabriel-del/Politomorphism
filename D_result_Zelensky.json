@@ -1,0 +1,14 @@
+{
+  "symbol": "Zelensky",
+  "D_result": {
+    "PE": 0.604,
+    "ICI": 0.6604,
+    "D": 0.6322,
+    "alpha": 0.5,
+    "D_std": 0.0027,
+    "D_ci_low": 0.6269,
+    "D_ci_high": 0.6375,
+    "n_docs": 2000,
+    "bootstrap_n": 20
+  }
+}
