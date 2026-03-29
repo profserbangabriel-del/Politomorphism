@@ -1,7 +1,7 @@
 {
   "data_sources": {
     "Sunflower Movement": "structural estimate (fallback)",
-    "Călin Georgescu": "structural estimate (fallback)",
+    "Călin Georgescu": "compute_D.py (real)",
     "Marcel Ciolacu": "compute_D.py (real)",
     "Donald Trump": "compute_D.py (real)",
     "Volodymyr Zelensky": "structural estimate (fallback)",
@@ -13,37 +13,40 @@
     "Hugo Chávez (sust.)": "structural estimate (fallback)",
     "Hugo Chávez (acute)": "structural estimate (fallback)"
   },
-  "real_values_count": 2,
+  "real_values_count": 3,
   "total_cases": 12,
   "global_calibration": {
-    "alpha_optimal": 0.2912,
-    "RMSE_at_alpha_opt": 0.0407,
-    "MAE_at_alpha_opt": 0.023,
-    "RMSE_at_alpha_05": 0.0527,
-    "MAE_at_alpha_05": 0.0287,
-    "pearson_r": 0.9458,
-    "pearson_p": 0.0,
-    "spearman_r": 0.7902,
-    "spearman_p": 0.0022,
-    "verdict": "Consider updating to alpha=0.2912"
+    "alpha_optimal": 0.1945,
+    "RMSE_at_alpha_opt": 0.0722,
+    "MAE_at_alpha_opt": 0.048,
+    "RMSE_at_alpha_05": 0.083,
+    "MAE_at_alpha_05": 0.0422,
+    "pearson_r": 0.8239,
+    "pearson_p": 0.001,
+    "spearman_r": 0.4056,
+    "spearman_p": 0.1908,
+    "verdict": "Consider updating to alpha=0.1945"
   },
   "typology_calibration": {
+    "Electorally Volatile": {
+      "n": 5,
+      "cases": [
+        "George Simion",
+        "Nelson Mandela",
+        "Emmanuel Macron",
+        "Hugo Chávez (sust.)",
+        "Hugo Chávez (acute)"
+      ],
+      "alpha_optimal": 0.378,
+      "RMSE": 0.0073,
+      "PE_mean": 0.632,
+      "ICI_mean": 0.732,
+      "D_legacy_mean": 0.6928,
+      "interpretation": "Balanced"
+    },
     "Civic Mobilization": {
       "n": 1,
       "note": "Insufficient cases (n<2)"
-    },
-    "Campaign/Ascension": {
-      "n": 2,
-      "cases": [
-        "Marcel Ciolacu",
-        "Donald Trump"
-      ],
-      "alpha_optimal": 0.1761,
-      "RMSE": 0.0905,
-      "PE_mean": 0.582,
-      "ICI_mean": 0.7898,
-      "D_legacy_mean": 0.7875,
-      "interpretation": "ICI-dominant"
     },
     "Institutionally Durable": {
       "n": 3,
@@ -63,21 +66,18 @@
       "n": 1,
       "note": "Insufficient cases (n<2)"
     },
-    "Electorally Volatile": {
-      "n": 5,
+    "Campaign/Ascension": {
+      "n": 2,
       "cases": [
-        "George Simion",
-        "Nelson Mandela",
-        "Emmanuel Macron",
-        "Hugo Chávez (sust.)",
-        "Hugo Chávez (acute)"
+        "Marcel Ciolacu",
+        "Donald Trump"
       ],
-      "alpha_optimal": 0.378,
-      "RMSE": 0.0073,
-      "PE_mean": 0.632,
-      "ICI_mean": 0.732,
-      "D_legacy_mean": 0.6928,
-      "interpretation": "Balanced"
+      "alpha_optimal": 0.1761,
+      "RMSE": 0.0905,
+      "PE_mean": 0.582,
+      "ICI_mean": 0.7898,
+      "D_legacy_mean": 0.7875,
+      "interpretation": "ICI-dominant"
     }
   },
   "per_case_decomposition": [
@@ -96,12 +96,12 @@
       "symbol": "Călin Georgescu",
       "typology": "Flash Viral",
       "D_legacy": 0.881,
-      "PE": 0.65,
-      "ICI": 0.97,
-      "D_new": 0.81,
-      "delta": -0.071,
+      "PE": 0.5949,
+      "ICI": 0.7004,
+      "D_new": 0.6477,
+      "delta": -0.2333,
       "dominant": "ICI",
-      "data_source": "structural estimate (fallback)"
+      "data_source": "compute_D.py (real)"
     },
     {
       "symbol": "Marcel Ciolacu",
@@ -219,10 +219,10 @@
     "flash_viral_cases": [
       "Călin Georgescu"
     ],
-    "flash_ICI_mean": 0.97,
-    "flash_PE_mean": 0.65,
-    "flash_ICI_PE_ratio": 1.4923,
+    "flash_ICI_mean": 0.7004,
+    "flash_PE_mean": 0.5949,
+    "flash_ICI_PE_ratio": 1.1773,
     "nonflash_ICI_PE_ratio": 1.1956,
-    "supported": true
+    "supported": false
   }
 }
