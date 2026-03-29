@@ -1,5 +1,6 @@
 {
-  "note": "Replace estimated PE/ICI with compute_D.py output for definitive results",
+  "note": "Real PE/ICI values: 1/13 symbols. Replace estimates with compute_D.py output.",
+  "real_values_count": 1,
   "H1": {
     "hypothesis": "H1: Flash Viral symbols are ICI-dominant (ICI > PE)",
     "flash_cases": [
@@ -15,8 +16,111 @@
       0.94
     ],
     "flash_ICI_PE_ratio": 1.5565,
-    "nonflash_ICI_PE_ratio": 1.1353,
+    "nonflash_ICI_PE_ratio": 1.1893,
     "all_flash_ICI_dominant": true,
     "mannwhitney_stat": 22.0,
     "mannwhitney_p": 0.0128,
-    "supported": 
+    "supported": true,
+    "confidence": "PARTIAL (1/13 real values)",
+    "falsification_condition": "H1 false if PE(Georgescu) >= ICI(Georgescu)"
+  },
+  "H2": {
+    "hypothesis": "H2: Romanian media ecosystem imposes structural ICI ceiling",
+    "romanian_triad": [
+      "Călin Georgescu",
+      "Marcel Ciolacu",
+      "George Simion"
+    ],
+    "PE_values": [
+      0.65,
+      0.78,
+      0.7
+    ],
+    "ICI_values": [
+      0.97,
+      0.88,
+      0.86
+    ],
+    "PE_variance": 0.002867,
+    "ICI_variance": 0.002289,
+    "PE_std": 0.0535,
+    "ICI_std": 0.0478,
+    "ICI_ceiling_detected": true,
+    "supported": true,
+    "confidence": "LOW (all estimated)",
+    "note": "n=3 limits statistical power. Consistent direction required for support.",
+    "falsification_condition": "H2 false if ICI variance >= PE variance for Romanian symbols"
+  },
+  "H3": {
+    "hypothesis": "H3: Zelensky's lower D reflects ICI suppression (wartime media convergence)",
+    "zelensky_PE": 0.6,
+    "zelensky_ICI": 0.74,
+    "zelensky_D": 0.68,
+    "mechanism_test": "PE < ICI → PE suppression (H3 contradicted)",
+    "ICI_suppression_detected": false,
+    "zelensky_PE_percentile": 23.1,
+    "zelensky_ICI_percentile": 15.4,
+    "putin_comparison": {
+      "putin_PE": 0.8,
+      "putin_ICI": 0.89,
+      "delta_ICI": 0.15,
+      "delta_PE": 0.2,
+      "interpretation": "Putin higher ICI = divergent international framing"
+    },
+    "supported": false,
+    "confidence": "PARTIAL (1/13 real)",
+    "falsification_condition": "H3 false if PE(Zelensky) < ICI(Zelensky)"
+  },
+  "sensitivity_analysis": [
+    {
+      "symbol": "Trump",
+      "lambda": 7.01,
+      "D": 0.734,
+      "SRM_point": 0.00233,
+      "SRM_low": 0.00164,
+      "SRM_high": 0.00331,
+      "interval_pct": 71.5,
+      "multiplier": 2.02
+    },
+    {
+      "symbol": "Ciolacu",
+      "lambda": 6.57,
+      "D": 0.841,
+      "SRM_point": 0.00078,
+      "SRM_low": 0.00056,
+      "SRM_high": 0.00109,
+      "interval_pct": 66.9,
+      "multiplier": 1.93
+    },
+    {
+      "symbol": "Zelensky",
+      "lambda": 5.11,
+      "D": 0.68,
+      "SRM_point": 0.01351,
+      "SRM_low": 0.01047,
+      "SRM_high": 0.01745,
+      "interval_pct": 51.7,
+      "multiplier": 1.67
+    },
+    {
+      "symbol": "Georgescu",
+      "lambda": 65.33,
+      "D": 0.881,
+      "SRM_point": 0.0,
+      "SRM_low": 0.0,
+      "SRM_high": 0.0,
+      "interval_pct": 2618.1,
+      "multiplier": 687.46
+    },
+    {
+      "symbol": "Chávez",
+      "lambda": 16.67,
+      "D": 0.72,
+      "SRM_point": 0.0,
+      "SRM_low": 0.0,
+      "SRM_high": 0.0,
+      "interval_pct": 186.7,
+      "multiplier": 5.3
+    }
+  ]
+}
