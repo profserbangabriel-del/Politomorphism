@@ -46,22 +46,6 @@
       "D_legacy_mean": 0.775,
       "interpretation": "ICI-dominant"
     },
-    "Electorally Volatile": {
-      "n": 5,
-      "cases": [
-        "George Simion",
-        "Nelson Mandela",
-        "Emmanuel Macron",
-        "Hugo Chávez (sust.)",
-        "Hugo Chávez (acute)"
-      ],
-      "alpha_optimal": 0.4623,
-      "RMSE": 0.1674,
-      "PE_mean": 0.586,
-      "ICI_mean": 0.7409,
-      "D_legacy_mean": 0.6928,
-      "interpretation": "Balanced"
-    },
     "Campaign/Ascension": {
       "n": 2,
       "cases": [
@@ -78,6 +62,22 @@
     "Flash Viral": {
       "n": 1,
       "note": "Insufficient cases (n<2)"
+    },
+    "Electorally Volatile": {
+      "n": 5,
+      "cases": [
+        "George Simion",
+        "Nelson Mandela",
+        "Emmanuel Macron",
+        "Hugo Chávez (sust.)",
+        "Hugo Chávez (acute)"
+      ],
+      "alpha_optimal": 0.4623,
+      "RMSE": 0.1674,
+      "PE_mean": 0.586,
+      "ICI_mean": 0.7409,
+      "D_legacy_mean": 0.6928,
+      "interpretation": "Balanced"
     }
   },
   "per_case_decomposition": [
