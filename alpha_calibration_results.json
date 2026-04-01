@@ -16,32 +16,39 @@
   "real_values_count": 12,
   "total_cases": 12,
   "global_calibration": {
-    "alpha_optimal": 0.2121,
+    "alpha_optimal": 0.2107,
     "RMSE_at_alpha_opt": 0.1462,
-    "MAE_at_alpha_opt": 0.1158,
-    "RMSE_at_alpha_05": 0.1543,
-    "MAE_at_alpha_05": 0.1305,
-    "pearson_r": -0.0406,
-    "pearson_p": 0.9004,
+    "MAE_at_alpha_opt": 0.116,
+    "RMSE_at_alpha_05": 0.1544,
+    "MAE_at_alpha_05": 0.1308,
+    "pearson_r": -0.0415,
+    "pearson_p": 0.8982,
     "spearman_r": -0.0629,
     "spearman_p": 0.8459,
-    "verdict": "Consider updating to alpha=0.2121"
+    "verdict": "Consider updating to alpha=0.2107"
   },
   "typology_calibration": {
-    "Campaign/Ascension": {
-      "n": 2,
+    "Electorally Volatile": {
+      "n": 5,
       "cases": [
-        "Marcel Ciolacu",
-        "Donald Trump"
+        "George Simion",
+        "Nelson Mandela",
+        "Emmanuel Macron",
+        "Hugo Chávez (sust.)",
+        "Hugo Chávez (acute)"
       ],
-      "alpha_optimal": 0.314,
-      "RMSE": 0.1036,
-      "PE_mean": 0.6065,
-      "ICI_mean": 0.8135,
-      "D_legacy_mean": 0.7875,
-      "interpretation": "ICI-dominant"
+      "alpha_optimal": 0.4623,
+      "RMSE": 0.1674,
+      "PE_mean": 0.586,
+      "ICI_mean": 0.7409,
+      "D_legacy_mean": 0.6928,
+      "interpretation": "Balanced"
     },
     "Flash Viral": {
+      "n": 1,
+      "note": "Insufficient cases (n<2)"
+    },
+    "Civic Mobilization": {
       "n": 1,
       "note": "Insufficient cases (n<2)"
     },
@@ -59,25 +66,18 @@
       "D_legacy_mean": 0.775,
       "interpretation": "ICI-dominant"
     },
-    "Civic Mobilization": {
-      "n": 1,
-      "note": "Insufficient cases (n<2)"
-    },
-    "Electorally Volatile": {
-      "n": 5,
+    "Campaign/Ascension": {
+      "n": 2,
       "cases": [
-        "George Simion",
-        "Nelson Mandela",
-        "Emmanuel Macron",
-        "Hugo Chávez (sust.)",
-        "Hugo Chávez (acute)"
+        "Marcel Ciolacu",
+        "Donald Trump"
       ],
-      "alpha_optimal": 0.4623,
-      "RMSE": 0.1674,
-      "PE_mean": 0.586,
-      "ICI_mean": 0.7409,
-      "D_legacy_mean": 0.6928,
-      "interpretation": "Balanced"
+      "alpha_optimal": 0.314,
+      "RMSE": 0.1036,
+      "PE_mean": 0.6065,
+      "ICI_mean": 0.8135,
+      "D_legacy_mean": 0.7875,
+      "interpretation": "ICI-dominant"
     }
   },
   "per_case_decomposition": [
@@ -85,10 +85,10 @@
       "symbol": "Sunflower Movement",
       "typology": "Civic Mobilization",
       "D_legacy": 0.774,
-      "PE": 0.6248,
-      "ICI": 0.7894,
-      "D_new": 0.7071,
-      "delta": -0.0669,
+      "PE": 0.6206,
+      "ICI": 0.7871,
+      "D_new": 0.7039,
+      "delta": -0.0701,
       "dominant": "ICI",
       "data_source": "compute_D.py (real)"
     },
@@ -222,7 +222,7 @@
     "flash_ICI_mean": 0.7004,
     "flash_PE_mean": 0.5949,
     "flash_ICI_PE_ratio": 1.1773,
-    "nonflash_ICI_PE_ratio": 1.2594,
+    "nonflash_ICI_PE_ratio": 1.2599,
     "supported": false
   }
 }
