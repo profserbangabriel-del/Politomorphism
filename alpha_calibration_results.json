@@ -28,6 +28,27 @@
     "verdict": "Consider updating to alpha=0.3081"
   },
   "typology_calibration": {
+    "Campaign/Ascension": {
+      "n": 2,
+      "cases": [
+        "Marcel Ciolacu",
+        "Donald Trump"
+      ],
+      "alpha_optimal": 0.3087,
+      "RMSE": 0.1528,
+      "PE_mean": 0.5838,
+      "ICI_mean": 0.7703,
+      "D_legacy_mean": 0.7875,
+      "interpretation": "ICI-dominant"
+    },
+    "Civic Mobilization": {
+      "n": 1,
+      "note": "Insufficient cases (n<2)"
+    },
+    "Flash Viral": {
+      "n": 1,
+      "note": "Insufficient cases (n<2)"
+    },
     "Electorally Volatile": {
       "n": 5,
       "cases": [
@@ -44,19 +65,6 @@
       "D_legacy_mean": 0.6928,
       "interpretation": "Balanced"
     },
-    "Campaign/Ascension": {
-      "n": 2,
-      "cases": [
-        "Marcel Ciolacu",
-        "Donald Trump"
-      ],
-      "alpha_optimal": 0.3087,
-      "RMSE": 0.1528,
-      "PE_mean": 0.5838,
-      "ICI_mean": 0.7703,
-      "D_legacy_mean": 0.7875,
-      "interpretation": "ICI-dominant"
-    },
     "Institutionally Durable": {
       "n": 3,
       "cases": [
@@ -70,14 +78,6 @@
       "ICI_mean": 0.6995,
       "D_legacy_mean": 0.775,
       "interpretation": "ICI-dominant"
-    },
-    "Flash Viral": {
-      "n": 1,
-      "note": "Insufficient cases (n<2)"
-    },
-    "Civic Mobilization": {
-      "n": 1,
-      "note": "Insufficient cases (n<2)"
     }
   },
   "per_case_decomposition": [
