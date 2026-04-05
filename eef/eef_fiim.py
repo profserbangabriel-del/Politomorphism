@@ -271,3 +271,148 @@ def compute_fiim():
             else:
                 delta_fh  = None
                 direction = "baseline"
+
+            results[country][year] = {
+                "year": year, "country": country,
+                "FH_Judicial": jud, "FH_Electoral": elec,
+                "BTI": round(bti, 2),
+                # probability vectors
+                "p_Justice":   p_j,
+                "p_Electoral": p_e,
+                "p_Coalition": p_c,
+                # H(t) — normalized entropy per domain
+                "H_Justice":   round(H_j, 4),
+                "H_Electoral": round(H_e, 4),
+                "H_Coalition": round(H_c, 4),
+                # V(t) — expected cost per domain
+                "V_Justice":   round(V_j, 4),
+                "V_Electoral": round(V_e, 4),
+                "V_Coalition": round(V_c, 4),
+                # IS per domain
+                "IS_Justice":   round(IS_j, 4),
+                "IS_Electoral": round(IS_e, 4),
+                "IS_Coalition": round(IS_c, 4),
+                # aggregate
+                "IS_agg":   round(IS_agg, 4),
+                "IS_pct":   round(IS_agg * 100, 2),
+                "zone":     zone,
+                # composite forward-looking
+                "IS_comp":    round(IS_comp, 4),
+                "IS_comp_pct":round(IS_comp * 100, 2),
+                "zone_comp":  zone_comp,
+                # discrete dynamics
+                "Delta_IS": round(Delta_IS, 4) if Delta_IS is not None else None,
+                "Pi_t":     round(Pi_t, 4)     if Pi_t    is not None else None,
+                "Phi_t":    round(Phi_t, 4)    if Phi_t   is not None else None,
+                "trend":    trend,
+                # directional
+                "delta_FH":  round(delta_fh, 2) if delta_fh is not None else None,
+                "direction": direction,
+                "electoral_override": (country, year) in ELECTORAL_OVERRIDES,
+            }
+            prev_IS_agg = IS_agg
+            prev_fh_j   = jud
+
+    return results
+
+
+# ── OUTPUT ────────────────────────────────────────────────────────────────────
+
+def print_results(results):
+    for country in COUNTRIES:
+        rows = sorted(results[country].values(), key=lambda r: r["year"])
+        print(f"\n{'='*95}")
+        print(f"  FIIM v2.1 — {country.upper()}")
+        print(f"  IS = {ALPHA}*H(t) + {1-ALPHA}*V(t)  |  IS_comp = IS + {BETA}*Delta_IS")
+        print(f"{'='*95}")
+        print(f"  {'Year':>4}  {'FH-J':>5}  {'FH-E':>5}  {'BTI':>5}  "
+              f"{'IS%':>6}  {'Zone':>10}  "
+              f"{'IS_comp%':>9}  {'Zone_c':>10}  "
+              f"{'Delta_IS':>9}  {'Trend':>14}  Direction")
+        print(f"  {'─'*93}")
+        for r in rows:
+            ovr  = "*" if r["electoral_override"] else " "
+            dIS  = f"{r['Delta_IS']:+.4f}" if r["Delta_IS"] is not None else "    —   "
+            print(f"  {r['year']:>4}  {r['FH_Judicial']:>5.2f}  "
+                  f"{r['FH_Electoral']:>5.2f}  {r['BTI']:>5.2f}  "
+                  f"{r['IS_pct']:>5.1f}%  {r['zone']:>10}  "
+                  f"{r['IS_comp_pct']:>8.1f}%  {r['zone_comp']:>10}{ovr} "
+                  f"{dIS:>9}  {r['trend']:>14}  {r['direction']}")
+
+
+def export_csv(results, path="EEF_FIIM_v21_All.csv"):
+    fields = [
+        "country","year","FH_Judicial","FH_Electoral","BTI",
+        "p0_Justice","p1_Justice","p2_Justice",
+        "p0_Electoral","p1_Electoral","p2_Electoral",
+        "p0_Coalition","p1_Coalition","p2_Coalition",
+        "H_Justice","V_Justice","IS_Justice",
+        "H_Electoral","V_Electoral","IS_Electoral",
+        "H_Coalition","V_Coalition","IS_Coalition",
+        "IS_agg","IS_pct","zone",
+        "IS_comp","IS_comp_pct","zone_comp",
+        "Delta_IS","Pi_t","Phi_t","trend",
+        "delta_FH","direction","electoral_override"
+    ]
+    rows = []
+    for country in COUNTRIES:
+        for year in YEARS:
+            if year in results[country]:
+                r = results[country][year]
+                rows.append({
+                    "country": r["country"], "year": r["year"],
+                    "FH_Judicial": r["FH_Judicial"],
+                    "FH_Electoral": r["FH_Electoral"],
+                    "BTI": r["BTI"],
+                    "p0_Justice":   r["p_Justice"][0],
+                    "p1_Justice":   r["p_Justice"][1],
+                    "p2_Justice":   r["p_Justice"][2],
+                    "p0_Electoral": r["p_Electoral"][0],
+                    "p1_Electoral": r["p_Electoral"][1],
+                    "p2_Electoral": r["p_Electoral"][2],
+                    "p0_Coalition": r["p_Coalition"][0],
+                    "p1_Coalition": r["p_Coalition"][1],
+                    "p2_Coalition": r["p_Coalition"][2],
+                    "H_Justice":  r["H_Justice"],
+                    "V_Justice":  r["V_Justice"],
+                    "IS_Justice": r["IS_Justice"],
+                    "H_Electoral":  r["H_Electoral"],
+                    "V_Electoral":  r["V_Electoral"],
+                    "IS_Electoral": r["IS_Electoral"],
+                    "H_Coalition":  r["H_Coalition"],
+                    "V_Coalition":  r["V_Coalition"],
+                    "IS_Coalition": r["IS_Coalition"],
+                    "IS_agg":   r["IS_agg"],
+                    "IS_pct":   r["IS_pct"],
+                    "zone":     r["zone"],
+                    "IS_comp":     r["IS_comp"],
+                    "IS_comp_pct": r["IS_comp_pct"],
+                    "zone_comp":   r["zone_comp"],
+                    "Delta_IS": r["Delta_IS"],
+                    "Pi_t":     r["Pi_t"],
+                    "Phi_t":    r["Phi_t"],
+                    "trend":    r["trend"],
+                    "delta_FH":  r["delta_FH"],
+                    "direction": r["direction"],
+                    "electoral_override": r["electoral_override"],
+                })
+    rows.sort(key=lambda r: (r["country"], r["year"]))
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        w.writerows(rows)
+    print(f"\n  CSV exported: {path}")
+
+
+if __name__ == "__main__":
+    print("\n  Politomorphism Engine — FIIM v2.1")
+    print(f"  Notation: H(t)=normalized entropy, V(t)=expected cost, IS=alpha*H+beta*V")
+    print(f"  Log base: natural (ln), S_max = ln(3) ≈ 1.0986 nats")
+    print(f"  Dynamics: discrete Delta_IS(t) = IS(t) - IS(t-1)")
+    print(f"  Composite: IS_comp = IS + {BETA}*Delta_IS")
+    print(f"  Countries: {', '.join(COUNTRIES)}")
+    print(f"  Period   : {YEARS[0]}-{YEARS[-1]}")
+    results = compute_fiim()
+    print_results(results)
+    export_csv(results)
+    print("\n  Done.\n")
