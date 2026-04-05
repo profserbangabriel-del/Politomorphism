@@ -19,3 +19,9 @@ jobs:
 
       - name: Run EEF inter-rater reliability
         run: python eef/eef_interrater.py
+
+      - name: Run FIIM v2.0
+        run: python eef/eef_fiim.py
+
+      - name: Run FIIM vs EEF comparison
+        run: python eef/eef_comparison_table.py
