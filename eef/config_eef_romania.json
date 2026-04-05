@@ -1,0 +1,26 @@
+{
+  "country": "Romania",
+  "year": "2024",
+  "domains": {
+    "Justice": [0.25, 0.55, 0.20],
+    "Electoral": [0.08, 0.52, 0.40],
+    "Coalition": [0.15, 0.65, 0.20]
+  },
+  "sources": {
+    "Justice": [
+      "INSCOP Research January 2026: 70.5% express little/no trust in justice system",
+      "Freedom House NIT 2024: Judicial score 4.50/7",
+      "EU Justice Scoreboard 2025: 51% companies perceive independence positively"
+    ],
+    "Electoral": [
+      "CCR annulment of presidential election round 1, Dec 2024",
+      "Venice Commission preliminary assessment Dec 2024",
+      "IDEA Democracy Tracker 2024"
+    ],
+    "Coalition": [
+      "Parliamentary elections Dec 2024: PSD 22.5%, PNL 13.6%",
+      "Hard-right bloc approx 35% of seats",
+      "Freedom House NIT 2024"
+    ]
+  }
+}
