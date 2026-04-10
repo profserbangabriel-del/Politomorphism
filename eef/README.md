@@ -1,4 +1,4 @@
-# EEF â€” Entropic Equilibrium Function
+# EEF- Entropic Equilibrium Function
 
 **Politomorphism Engine | Complete Methodology Documentation**
 
