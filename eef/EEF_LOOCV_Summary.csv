@@ -1,0 +1,5 @@
+zone,precision,recall,f1,support
+MODERATE,1.0,1.0,1.0,36
+HIGH,1.0,1.0,1.0,24
+MACRO,1.0,1.0,1.0,60
+ACCURACY,,,1.0,60
