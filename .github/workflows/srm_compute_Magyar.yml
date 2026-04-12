@@ -69,7 +69,7 @@ jobs:
           END_DATE:    ${{ github.event.inputs.end_date }}
           MAX_ART:     ${{ github.event.inputs.max_articles }}
         run: |
-          python3 - << 'PYEOF'
+          cat > /tmp/fetch_articles.py << 'PYEOF'
           import mediacloud.api as mc
           import json, os, datetime, csv
 
@@ -80,9 +80,9 @@ jobs:
           max_art  = int(os.environ["MAX_ART"].strip())
           api_key  = os.environ["MC_API_KEY"].strip()
 
-          print(f"Symbol: {symbol}")
-          print(f"Query:  {query}")
-          print(f"Period: {start} -> {end}")
+          print("Symbol: " + symbol)
+          print("Query:  " + query)
+          print("Period: " + start + " -> " + end)
 
           search = mc.SearchApi(api_key)
 
@@ -102,12 +102,12 @@ jobs:
               if not result:
                   break
               all_stories.extend(result)
-              print(f"  Fetched: {len(all_stories)} articles...")
+              print("  Fetched: " + str(len(all_stories)) + " articles...")
               if page is None:
                   break
 
           all_stories = all_stories[:max_art]
-          print(f"Total articles: {len(all_stories)}")
+          print("Total articles: " + str(len(all_stories)))
 
           def make_serializable(obj):
               if isinstance(obj, dict):
@@ -122,10 +122,10 @@ jobs:
           all_stories_clean = make_serializable(all_stories)
 
           os.makedirs("data", exist_ok=True)
-          with open(f"data/{symbol}-DATA.json", "w") as f:
+          with open("data/" + symbol + "-DATA.json", "w") as f:
               json.dump(all_stories_clean, f)
 
-          with open(f"{symbol}-DATA.csv", "w", newline="", encoding="utf-8") as f:
+          with open(symbol + "-DATA.csv", "w", newline="", encoding="utf-8") as f:
               w = csv.writer(f)
               w.writerow(["title", "publish_date", "url", "language"])
               for s in all_stories_clean:
@@ -136,15 +136,16 @@ jobs:
                       s.get("language",""),
                   ])
 
-          print(f"Saved {symbol}-DATA.csv")
+          print("Saved " + symbol + "-DATA.csv")
           PYEOF
+          python3 /tmp/fetch_articles.py
 
       - name: Compute D (PE + ICI) with bootstrap n=200
         env:
           SYMBOL:      ${{ github.event.inputs.symbol }}
           BOOTSTRAP_N: ${{ github.event.inputs.bootstrap_n }}
         run: |
-          python3 - << 'PYEOF'
+          cat > /tmp/compute_d.py << 'PYEOF'
           import json, random, numpy as np, os
           from sklearn.decomposition import LatentDirichletAllocation
           from sklearn.feature_extraction.text import CountVectorizer
@@ -158,12 +159,12 @@ jobs:
           K           = 10
           seed        = 42
 
-          with open(f"data/{symbol}-DATA.json") as f:
+          with open("data/" + symbol + "-DATA.json") as f:
               stories = json.load(f)
 
           texts = [s.get("title","") + " " + s.get("description","") for s in stories]
           texts = [t.strip() for t in texts if len(t.strip()) > 20]
-          print(f"Valid texts: {len(texts)}")
+          print("Valid texts: " + str(len(texts)))
 
           print("Computing PE (LDA)...")
           vectorizer = CountVectorizer(
@@ -184,7 +185,7 @@ jobs:
           sample_pairs = random.sample(pairs, min(5000, len(pairs)))
           jsd_vals = [jensenshannon(doc_topics[i], doc_topics[j])**2 for i, j in sample_pairs]
           PE = float(np.mean(jsd_vals))
-          print(f"  PE = {PE:.4f}")
+          print("  PE = " + str(round(PE, 4)))
 
           print("Computing ICI (sentence embeddings)...")
           model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
@@ -193,9 +194,9 @@ jobs:
           sim_matrix = cosine_similarity(embeddings)
           upper = sim_matrix[np.triu_indices(len(sample_texts), k=1)]
           ICI = float(1 - np.mean(upper))
-          print(f"  ICI = {ICI:.4f}")
+          print("  ICI = " + str(round(ICI, 4)))
 
-          print(f"Bootstrap n={bootstrap_n}...")
+          print("Bootstrap n=" + str(bootstrap_n) + "...")
           D_boots = []
           indices = list(range(len(texts)))
           for b in range(bootstrap_n):
@@ -218,7 +219,7 @@ jobs:
               D_boots.append(alpha * PE_b + (1 - alpha) * ICI_b)
 
               if (b+1) % 50 == 0:
-                  print(f"  Bootstrap {b+1}/{bootstrap_n} done")
+                  print("  Bootstrap " + str(b+1) + "/" + str(bootstrap_n) + " done")
 
           D_mean  = float(np.mean(D_boots))
           D_std   = float(np.std(D_boots))
@@ -231,3 +232,71 @@ jobs:
                   "PE": round(PE, 4),
                   "ICI": round(ICI, 4),
                   "D": round(D_mean, 4),
+                  "alpha": alpha,
+                  "D_std": round(D_std, 4),
+                  "D_ci_low": round(D_ci_lo, 4),
+                  "D_ci_high": round(D_ci_hi, 4),
+                  "n_docs": len(texts),
+                  "bootstrap_n": bootstrap_n,
+              }
+          }
+
+          print("D = " + str(round(D_mean,4)) + " +/- " + str(round(D_std,4)) +
+                " [" + str(round(D_ci_lo,4)) + ", " + str(round(D_ci_hi,4)) + "]")
+
+          with open("D_result_" + symbol + ".json", "w") as f:
+              json.dump(result, f, indent=2)
+          print("Saved D_result_" + symbol + ".json")
+          PYEOF
+          python3 /tmp/compute_d.py
+
+      - name: Compute V, A, N, SRM
+        env:
+          SYMBOL:       ${{ github.event.inputs.symbol }}
+          LAMBDA_VALUE: ${{ github.event.inputs.lambda_value }}
+          START_DATE:   ${{ github.event.inputs.start_date }}
+          END_DATE:     ${{ github.event.inputs.end_date }}
+        run: |
+          cat > /tmp/compute_van.py << 'PYEOF'
+          import json, math, numpy as np, datetime, os
+          from collections import defaultdict
+          from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+          symbol     = os.environ["SYMBOL"].strip()
+          lam        = float(os.environ["LAMBDA_VALUE"].strip())
+          start_date = os.environ["START_DATE"].strip()
+          end_date   = os.environ["END_DATE"].strip()
+
+          with open("data/" + symbol + "-DATA.json") as f:
+              stories = json.load(f)
+
+          with open("D_result_" + symbol + ".json") as f:
+              d_data = json.load(f)
+          D = d_data["D_result"]["D"]
+
+          start_dt   = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+          end_dt     = datetime.datetime.strptime(end_date,   "%Y-%m-%d")
+          total_days = (end_dt - start_dt).days + 1
+
+          dates_with_articles = set()
+          for s in stories:
+              pd_val = s.get("publish_date", "")
+              if pd_val:
+                  dates_with_articles.add(str(pd_val)[:10])
+          N = round(len(dates_with_articles) / total_days, 4)
+
+          daily_counts = defaultdict(int)
+          for s in stories:
+              pd_val = s.get("publish_date", "")
+              if pd_val:
+                  daily_counts[str(pd_val)[:10]] += 1
+
+          all_dates = sorted(daily_counts.keys())
+          counts    = [daily_counts[d] for d in all_dates]
+          if len(counts) >= 60:
+              baseline = float(np.mean(counts[:30]))
+              peak_val = float(np.max(counts))
+              if baseline > 0 and peak_val > 0:
+                  V_raw = math.log((peak_val / baseline) + 1)
+                  V = min(round(V_raw / math.log(51), 4), 1.0)
+              else:
