@@ -255,4 +255,134 @@ jobs:
           SYMBOL:       ${{ github.event.inputs.symbol }}
           LAMBDA_VALUE: ${{ github.event.inputs.lambda_value }}
           START_DATE:   ${{ github.event.inputs.start_date }}
-          EN
+          END_DATE:     ${{ github.event.inputs.end_date }}
+        run: |
+          cat > /tmp/compute_van.py << 'PYEOF'
+          import json, math, numpy as np, datetime, os
+          from collections import defaultdict
+          from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+          symbol     = os.environ["SYMBOL"].strip()
+          lam        = float(os.environ["LAMBDA_VALUE"].strip())
+          start_date = os.environ["START_DATE"].strip()
+          end_date   = os.environ["END_DATE"].strip()
+
+          with open("data/" + symbol + "-DATA.json") as f:
+              stories = json.load(f)
+
+          with open("D_result_" + symbol + ".json") as f:
+              d_data = json.load(f)
+          D = d_data["D_result"]["D"]
+
+          start_dt   = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+          end_dt     = datetime.datetime.strptime(end_date,   "%Y-%m-%d")
+          total_days = (end_dt - start_dt).days + 1
+
+          dates_with_articles = set()
+          for s in stories:
+              pd_val = s.get("publish_date", "")
+              if pd_val:
+                  dates_with_articles.add(str(pd_val)[:10])
+          N = round(len(dates_with_articles) / total_days, 4)
+
+          daily_counts = defaultdict(int)
+          for s in stories:
+              pd_val = s.get("publish_date", "")
+              if pd_val:
+                  daily_counts[str(pd_val)[:10]] += 1
+
+          all_dates = sorted(daily_counts.keys())
+          counts    = [daily_counts[d] for d in all_dates]
+          if len(counts) >= 60:
+              baseline = float(np.mean(counts[:30]))
+              peak_val = float(np.max(counts))
+              if baseline > 0 and peak_val > 0:
+                  V_raw = math.log((peak_val / baseline) + 1)
+                  V = min(round(V_raw / math.log(51), 4), 1.0)
+              else:
+                  V = 0.5
+          else:
+              V = 0.5
+
+          analyzer = SentimentIntensityAnalyzer()
+          scores = []
+          for s in stories:
+              title = s.get("title", "")
+              if title and len(title) > 5:
+                  sc = analyzer.polarity_scores(title)
+                  scores.append(abs(sc["compound"]))
+          A = round(float(np.mean(scores)), 4) if scores else 0.15
+
+          SRM = V * A * math.exp(-lam * D) * N
+
+          result = {
+              "symbol": symbol,
+              "V": round(V, 4),
+              "A": round(A, 4),
+              "N": round(N, 4),
+              "lambda": lam,
+              "start": start_date,
+              "end": end_date,
+              "n_articles": len(stories),
+              "D": D,
+              "SRM": round(SRM, 8),
+          }
+
+          print("=" * 50)
+          print("Symbol:  " + symbol)
+          print("V=" + str(V) + "  A=" + str(A) + "  N=" + str(N) + "  D=" + str(D) + "  lam=" + str(lam))
+          print("SRM = " + str(round(SRM, 8)))
+          print("=" * 50)
+
+          with open("V_A_N_" + symbol + ".json", "w") as f:
+              json.dump(result, f, indent=2)
+          print("Saved V_A_N_" + symbol + ".json")
+          PYEOF
+          python3 /tmp/compute_van.py
+
+      - name: Calibrate alpha (exploratory)
+        run: python3 scripts/calibrate_alpha.py
+
+      - name: Test hypotheses
+        run: python3 scripts/test_hypotheses.py
+
+      - name: Debug — listează fișierele generate
+        env:
+          SYMBOL: ${{ github.event.inputs.symbol }}
+        run: |
+          echo "=== ROOT ==="
+          ls -la *.json *.csv 2>/dev/null || echo "Niciun json/csv in root"
+          echo "=== DATA DIR ==="
+          ls -la data/ 2>/dev/null || echo "Niciun director data/"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SRM-Magyar-${{ github.run_number }}
+          retention-days: 90
+          path: |
+            D_result_${{ github.event.inputs.symbol }}.json
+            V_A_N_${{ github.event.inputs.symbol }}.json
+            ${{ github.event.inputs.symbol }}-DATA.csv
+            alpha_calibration_results.json
+            hypothesis_test_results.json
+
+      - name: Commit results to repo
+        env:
+          SYMBOL: ${{ github.event.inputs.symbol }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config pull.rebase false
+          git stash --include-untracked || true
+          git pull origin main || true
+          git stash pop || true
+          git add \
+            "D_result_${SYMBOL}.json" \
+            "V_A_N_${SYMBOL}.json" \
+            "${SYMBOL}-DATA.csv" \
+            alpha_calibration_results.json \
+            hypothesis_test_results.json || true
+          git diff --cached --quiet && echo "Nothing to commit" && exit 0
+          git commit -m "Add SRM results: ${SYMBOL} [Run #${{ github.run_number }}]"
+          git push origin main
