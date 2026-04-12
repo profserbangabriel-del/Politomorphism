@@ -35,19 +35,17 @@
     "verdict": "Consider updating to alpha=0.389"
   },
   "typology_calibration": {
-    "Institutionally Durable": {
-      "n": 4,
+    "Flash Viral": {
+      "n": 2,
       "cases": [
-        "Volodymyr Zelensky",
-        "Vladimir Putin",
-        "Viktor Orbán",
-        "Benjamin Netanyahu"
+        "Călin Georgescu",
+        "Charlie Hebdo"
       ],
-      "alpha_optimal": 0.0762,
-      "RMSE": 0.1055,
-      "PE_mean": 0.5912,
-      "ICI_mean": 0.7084,
-      "D_legacy_mean": 0.744,
+      "alpha_optimal": 0.0,
+      "RMSE": 0.139,
+      "PE_mean": 0.5935,
+      "ICI_mean": 0.7149,
+      "D_legacy_mean": 0.7665,
       "interpretation": "ICI-dominant"
     },
     "CCFI": {
@@ -64,9 +62,24 @@
       "D_legacy_mean": 0.729,
       "interpretation": "Balanced"
     },
-    "Geopolitical Event": {
+    "Civic Mobilization": {
       "n": 1,
       "note": "Insufficient cases (n<2)"
+    },
+    "Institutionally Durable": {
+      "n": 4,
+      "cases": [
+        "Volodymyr Zelensky",
+        "Vladimir Putin",
+        "Viktor Orbán",
+        "Benjamin Netanyahu"
+      ],
+      "alpha_optimal": 0.0762,
+      "RMSE": 0.1055,
+      "PE_mean": 0.5912,
+      "ICI_mean": 0.7084,
+      "D_legacy_mean": 0.744,
+      "interpretation": "ICI-dominant"
     },
     "Electorally Volatile": {
       "n": 5,
@@ -84,10 +97,6 @@
       "D_legacy_mean": 0.6928,
       "interpretation": "Balanced"
     },
-    "Civic Mobilization": {
-      "n": 1,
-      "note": "Insufficient cases (n<2)"
-    },
     "Campaign/Ascension": {
       "n": 3,
       "cases": [
@@ -102,18 +111,9 @@
       "D_legacy_mean": 0.757,
       "interpretation": "ICI-dominant"
     },
-    "Flash Viral": {
-      "n": 2,
-      "cases": [
-        "Călin Georgescu",
-        "Charlie Hebdo"
-      ],
-      "alpha_optimal": 0.0,
-      "RMSE": 0.139,
-      "PE_mean": 0.5935,
-      "ICI_mean": 0.7149,
-      "D_legacy_mean": 0.7665,
-      "interpretation": "ICI-dominant"
+    "Geopolitical Event": {
+      "n": 1,
+      "note": "Insufficient cases (n<2)"
     }
   },
   "per_case_decomposition": [

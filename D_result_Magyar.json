@@ -1,0 +1,14 @@
+{
+  "symbol": "Magyar",
+  "D_result": {
+    "PE": 0.4388,
+    "ICI": 0.8075,
+    "D": NaN,
+    "alpha": 0.5,
+    "D_std": NaN,
+    "D_ci_low": NaN,
+    "D_ci_high": NaN,
+    "n_docs": 440,
+    "bootstrap_n": 200
+  }
+}
