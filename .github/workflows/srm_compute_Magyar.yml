@@ -61,27 +61,31 @@ jobs:
       - name: Fetch articles from Media Cloud
         env:
           MC_API_KEY: ${{ secrets.MEDIACLOUD_API_KEY }}
+          SYMBOL:     ${{ github.event.inputs.symbol }}
+          QUERY:      ${{ github.event.inputs.query }}
+          START_DATE: ${{ github.event.inputs.start_date }}
+          END_DATE:   ${{ github.event.inputs.end_date }}
+          MAX_ART:    ${{ github.event.inputs.max_articles }}
         run: |
           python3 - << 'PYEOF'
           import mediacloud.api as mc
-          import json, os, datetime
+          import json, os, datetime, csv
 
-          symbol   = "${{ github.event.inputs.symbol }}"
-          query    = "${{ github.event.inputs.query }}"
-          start    = "${{ github.event.inputs.start_date }}"
-          end      = "${{ github.event.inputs.end_date }}"
-          max_art  = int("${{ github.event.inputs.max_articles }}")
-          api_key  = os.environ["MC_API_KEY"]
+          symbol   = os.environ["SYMBOL"].strip()
+          query    = os.environ["QUERY"].strip()
+          start    = os.environ["START_DATE"].strip()
+          end      = os.environ["END_DATE"].strip()
+          max_art  = int(os.environ["MAX_ART"].strip())
+          api_key  = os.environ["MC_API_KEY"].strip()
 
           print(f"Symbol: {symbol}")
           print(f"Query:  {query}")
-          print(f"Period: {start} → {end}")
+          print(f"Period: {start} -> {end}")
 
           search = mc.SearchApi(api_key)
 
-          # FIX 1: folosim .date() nu datetime, conform cerintei API-ului mediacloud 4.6
-          start_dt = datetime.datetime.strptime(start.strip(), "%Y-%m-%d").date()
-          end_dt   = datetime.datetime.strptime(end.strip(),   "%Y-%m-%d").date()
+          start_dt = datetime.datetime.strptime(start, "%Y-%m-%d").date()
+          end_dt   = datetime.datetime.strptime(end,   "%Y-%m-%d").date()
 
           all_stories = []
           page = None
@@ -103,7 +107,6 @@ jobs:
           all_stories = all_stories[:max_art]
           print(f"Total articles: {len(all_stories)}")
 
-          # FIX 2: serializam orice camp datetime/date la string inainte de json.dump
           def make_serializable(obj):
               if isinstance(obj, dict):
                   return {k: make_serializable(v) for k, v in obj.items()}
@@ -120,7 +123,6 @@ jobs:
           with open(f"data/{symbol}-DATA.json", "w") as f:
               json.dump(all_stories_clean, f)
 
-          import csv
           with open(f"{symbol}-DATA.csv", "w", newline="", encoding="utf-8") as f:
               w = csv.writer(f)
               w.writerow(["title", "publish_date", "url", "language"])
@@ -136,19 +138,21 @@ jobs:
           PYEOF
 
       - name: Compute D (PE + ICI) with bootstrap n=200
+        env:
+          SYMBOL:      ${{ github.event.inputs.symbol }}
+          BOOTSTRAP_N: ${{ github.event.inputs.bootstrap_n }}
         run: |
           python3 - << 'PYEOF'
-          import json, math, random, numpy as np
+          import json, random, numpy as np, os
           from sklearn.decomposition import LatentDirichletAllocation
           from sklearn.feature_extraction.text import CountVectorizer
           from sentence_transformers import SentenceTransformer
           from sklearn.metrics.pairwise import cosine_similarity
-          from scipy.stats import entropy
           from scipy.spatial.distance import jensenshannon
 
-          symbol      = "${{ github.event.inputs.symbol }}"
+          symbol      = os.environ["SYMBOL"].strip()
           alpha       = 0.5
-          bootstrap_n = int("${{ github.event.inputs.bootstrap_n }}")
+          bootstrap_n = int(os.environ["BOOTSTRAP_N"].strip())
           K           = 10
           seed        = 42
 
@@ -174,11 +178,9 @@ jobs:
           doc_topics = lda.fit_transform(X)
 
           n = len(doc_topics)
-          jsd_vals = []
           pairs = [(i, j) for i in range(n) for j in range(i+1, n)]
           sample_pairs = random.sample(pairs, min(5000, len(pairs)))
-          for i, j in sample_pairs:
-              jsd_vals.append(jensenshannon(doc_topics[i], doc_topics[j])**2)
+          jsd_vals = [jensenshannon(doc_topics[i], doc_topics[j])**2 for i, j in sample_pairs]
           PE = float(np.mean(jsd_vals))
           print(f"  PE = {PE:.4f}")
 
@@ -202,8 +204,7 @@ jobs:
               dt = lda.transform(Xb)
               sp = random.sample(list(range(len(dt))), min(500, len(dt)))
               jsd_b = [jensenshannon(dt[sp[i]], dt[sp[j]])**2
-                       for i in range(len(sp)) for j in range(i+1, len(sp))
-                       if i != j][:1000]
+                       for i in range(len(sp)) for j in range(i+1, len(sp))][:1000]
               PE_b = float(np.mean(jsd_b)) if jsd_b else PE
 
               st = random.sample(sample_t, min(200, len(sample_t)))
@@ -212,8 +213,7 @@ jobs:
               up_b  = sim_b[np.triu_indices(len(st), k=1)]
               ICI_b = float(1 - np.mean(up_b))
 
-              D_b = alpha * PE_b + (1 - alpha) * ICI_b
-              D_boots.append(D_b)
+              D_boots.append(alpha * PE_b + (1 - alpha) * ICI_b)
 
               if (b+1) % 50 == 0:
                   print(f"  Bootstrap {b+1}/{bootstrap_n} done")
@@ -238,7 +238,7 @@ jobs:
               }
           }
 
-          print(f"\nD = {D_mean:.4f} ± {D_std:.4f} [{D_ci_lo:.4f}, {D_ci_hi:.4f}]")
+          print(f"\nD = {D_mean:.4f} +/- {D_std:.4f} [{D_ci_lo:.4f}, {D_ci_hi:.4f}]")
 
           with open(f"D_result_{symbol}.json", "w") as f:
               json.dump(result, f, indent=2)
@@ -246,15 +246,21 @@ jobs:
           PYEOF
 
       - name: Compute V, A, N, SRM
+        env:
+          SYMBOL:       ${{ github.event.inputs.symbol }}
+          LAMBDA_VALUE: ${{ github.event.inputs.lambda_value }}
+          START_DATE:   ${{ github.event.inputs.start_date }}
+          END_DATE:     ${{ github.event.inputs.end_date }}
         run: |
           python3 - << 'PYEOF'
-          import json, math, numpy as np, datetime
+          import json, math, numpy as np, datetime, os
+          from collections import defaultdict
           from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-          symbol     = "${{ github.event.inputs.symbol }}"
-          lam        = float("${{ github.event.inputs.lambda_value }}")
-          start_date = "${{ github.event.inputs.start_date }}"
-          end_date   = "${{ github.event.inputs.end_date }}"
+          symbol     = os.environ["SYMBOL"].strip()
+          lam        = float(os.environ["LAMBDA_VALUE"].strip())
+          start_date = os.environ["START_DATE"].strip()
+          end_date   = os.environ["END_DATE"].strip()
 
           with open(f"data/{symbol}-DATA.json") as f:
               stories = json.load(f)
@@ -263,28 +269,95 @@ jobs:
               d_data = json.load(f)
           D = d_data["D_result"]["D"]
 
-          start_dt   = datetime.datetime.strptime(start_date.strip(), "%Y-%m-%d")
-          end_dt     = datetime.datetime.strptime(end_date.strip(),   "%Y-%m-%d")
+          start_dt   = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+          end_dt     = datetime.datetime.strptime(end_date,   "%Y-%m-%d")
           total_days = (end_dt - start_dt).days + 1
 
           dates_with_articles = set()
           for s in stories:
-              pd = s.get("publish_date", "")
-              if pd:
-                  try:
-                      dates_with_articles.add(str(pd)[:10])
-                  except:
-                      pass
+              pd_val = s.get("publish_date", "")
+              if pd_val:
+                  dates_with_articles.add(str(pd_val)[:10])
           N = round(len(dates_with_articles) / total_days, 4)
 
-          from collections import defaultdict
           daily_counts = defaultdict(int)
           for s in stories:
-              pd = s.get("publish_date", "")
-              if pd:
-                  daily_counts[str(pd)[:10]] += 1
+              pd_val = s.get("publish_date", "")
+              if pd_val:
+                  daily_counts[str(pd_val)[:10]] += 1
 
           all_dates = sorted(daily_counts.keys())
           counts    = [daily_counts[d] for d in all_dates]
           if len(counts) >= 60:
-              baseline =
+              baseline = float(np.mean(counts[:30]))
+              peak_val = float(np.max(counts))
+              if baseline > 0 and peak_val > 0:
+                  V_raw = math.log((peak_val / baseline) + 1)
+                  V = min(round(V_raw / math.log(51), 4), 1.0)
+              else:
+                  V = 0.5
+          else:
+              V = 0.5
+
+          analyzer = SentimentIntensityAnalyzer()
+          scores = []
+          for s in stories:
+              title = s.get("title", "")
+              if title and len(title) > 5:
+                  sc = analyzer.polarity_scores(title)
+                  scores.append(abs(sc["compound"]))
+          A = round(float(np.mean(scores)), 4) if scores else 0.15
+
+          SRM = V * A * math.exp(-lam * D) * N
+
+          result = {
+              "symbol": symbol,
+              "V": round(V, 4),
+              "A": round(A, 4),
+              "N": round(N, 4),
+              "lambda": lam,
+              "start": start_date,
+              "end": end_date,
+              "n_articles": len(stories),
+              "D": D,
+              "SRM": round(SRM, 8),
+          }
+
+          print(f"\n{'='*50}")
+          print(f"Symbol:  {symbol}")
+          print(f"V={V}  A={A}  N={N}  D={D}  lam={lam}")
+          print(f"SRM = {SRM:.8f}")
+          print(f"{'='*50}")
+
+          with open(f"V_A_N_{symbol}.json", "w") as f:
+              json.dump(result, f, indent=2)
+          print(f"Saved V_A_N_{symbol}.json")
+          PYEOF
+
+      - name: Calibrate alpha (exploratory)
+        run: python3 scripts/calibrate_alpha.py
+
+      - name: Test hypotheses
+        run: python3 scripts/test_hypotheses.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: D-computation-Magyar-${{ github.run_number }}
+          retention-days: 90
+          path: |
+            D_result_Magyar.json
+            V_A_N_Magyar.json
+            Magyar-DATA.csv
+            alpha_calibration_results.json
+            hypothesis_test_results.json
+
+      - name: Commit results to repo
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
+          git add D_result_Magyar.json V_A_N_Magyar.json Magyar-DATA.csv \
+                  alpha_calibration_results.json hypothesis_test_results.json
+          git commit -m "Add SRM results: Magyar [Run #${{ github.run_number }}]" || echo "Nothing to commit"
+          git push origin main
