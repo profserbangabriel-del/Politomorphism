@@ -36,6 +36,8 @@ jobs:
   compute-srm:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repo
@@ -60,12 +62,12 @@ jobs:
 
       - name: Fetch articles from Media Cloud
         env:
-          MC_API_KEY: ${{ secrets.MEDIACLOUD_API_KEY }}
-          SYMBOL:     ${{ github.event.inputs.symbol }}
-          QUERY:      ${{ github.event.inputs.query }}
-          START_DATE: ${{ github.event.inputs.start_date }}
-          END_DATE:   ${{ github.event.inputs.end_date }}
-          MAX_ART:    ${{ github.event.inputs.max_articles }}
+          MC_API_KEY:  ${{ secrets.MEDIACLOUD_API_KEY }}
+          SYMBOL:      ${{ github.event.inputs.symbol }}
+          QUERY:       ${{ github.event.inputs.query }}
+          START_DATE:  ${{ github.event.inputs.start_date }}
+          END_DATE:    ${{ github.event.inputs.end_date }}
+          MAX_ART:     ${{ github.event.inputs.max_articles }}
         run: |
           python3 - << 'PYEOF'
           import mediacloud.api as mc
@@ -346,18 +348,29 @@ jobs:
           name: D-computation-Magyar-${{ github.run_number }}
           retention-days: 90
           path: |
-            D_result_Magyar.json
-            V_A_N_Magyar.json
-            Magyar-DATA.csv
+            D_result_${{ github.event.inputs.symbol }}.json
+            V_A_N_${{ github.event.inputs.symbol }}.json
+            ${{ github.event.inputs.symbol }}-DATA.csv
             alpha_calibration_results.json
             hypothesis_test_results.json
 
       - name: Commit results to repo
+        env:
+          SYMBOL: ${{ github.event.inputs.symbol }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage fișierele ÎNAINTE de pull — evită "unstaged changes" la rebase
+          git add \
+            "D_result_${SYMBOL}.json" \
+            "V_A_N_${SYMBOL}.json" \
+            "${SYMBOL}-DATA.csv" \
+            alpha_calibration_results.json \
+            hypothesis_test_results.json || true
+
           git pull --rebase origin main
-          git add D_result_Magyar.json V_A_N_Magyar.json Magyar-DATA.csv \
-                  alpha_calibration_results.json hypothesis_test_results.json
-          git commit -m "Add SRM results: Magyar [Run #${{ github.run_number }}]" || echo "Nothing to commit"
+
+          git diff --cached --quiet && echo "Nothing to commit" && exit 0
+          git commit -m "Add SRM results: ${SYMBOL} [Run #${{ github.run_number }}]"
           git push origin main
