@@ -2,12 +2,6 @@ name: SRM — Imran Khan 2018 Data Collection
 
 on:
   workflow_dispatch:
-    inputs:
-      run_mediacloud:
-        description: 'Run Media Cloud PE/ICI pipeline'
-        required: false
-        default: 'true'
-        type: boolean
 
 jobs:
 
@@ -50,7 +44,6 @@ jobs:
     name: Collect PE, ICI, D
     runs-on: ubuntu-latest
     needs: collect-quantitative
-    if: ${{ inputs.run_mediacloud == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
