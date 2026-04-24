@@ -11,12 +11,11 @@ WINDOW_START  = "2018-07-01"
 WINDOW_END    = "2018-08-22"
 QUERY         = '"Imran Khan"'
 COLLECTION_IDS = [34412234, 38379429]
-TARGET_ARTICLES = 3000
-LDA_N_TOPICS  = 10
-LDA_PASSES    = 15
+TARGET_ARTICLES = 300          # redus de la 3000
+LDA_N_TOPICS  = 8
+LDA_PASSES    = 10
 LDA_RANDOM    = 42
-SBERT_MODEL   = "all-MiniLM-L6-v2"
-MIN_ARTICLES_PER_OUTLET = 5
+MIN_ARTICLES_PER_OUTLET = 3   # redus de la 5
 
 RESULTS_DIR = Path("srm/imrankhan_2018/results")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -25,7 +24,6 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 def collect_articles(api_key):
     from mediacloud.api import SearchApi
     print("[MC] Fetching articles...")
-
     mc = SearchApi(api_key)
     all_articles = []
     pagination_token = None
@@ -60,8 +58,7 @@ def collect_articles(api_key):
 
         if not pagination_token:
             break
-
-        time.sleep(0.5)
+        time.sleep(0.3)
 
     articles = [a for a in all_articles if len(a.get("text", "")) > 50]
     print(f"  {len(articles)} articles after filter")
@@ -72,7 +69,7 @@ def compute_PE(articles):
     from gensim import corpora, models
     from gensim.utils import simple_preprocess
     from scipy.spatial.distance import jensenshannon
-    print("[PE] Computing Polysemy Entropy...")
+    print("[PE] Computing Polysemy Entropy (LDA)...")
 
     outlet_groups = {}
     for a in articles:
@@ -81,14 +78,14 @@ def compute_PE(articles):
                if len(v) >= MIN_ARTICLES_PER_OUTLET}
 
     if len(outlets) < 2:
-        raise RuntimeError(f"Too few outlets: {len(outlets)} — need at least 2 with {MIN_ARTICLES_PER_OUTLET}+ articles each")
+        raise RuntimeError(f"Too few outlets: {len(outlets)}")
 
     print(f"  Outlets ({len(outlets)}): {list(outlets.keys())}")
 
     all_texts = [simple_preprocess(t, deacc=True)
                  for texts in outlets.values() for t in texts]
     dictionary = corpora.Dictionary(all_texts)
-    dictionary.filter_extremes(no_below=3, no_above=0.85)
+    dictionary.filter_extremes(no_below=2, no_above=0.90)
     corpus = [dictionary.doc2bow(t) for t in all_texts]
 
     lda = models.LdaModel(
@@ -110,7 +107,7 @@ def compute_PE(articles):
 
     jsd_vals, pairs = [], []
     for i in range(len(names)):
-        for j in range(i + 1, len(names)):
+        for j in range(i+1, len(names)):
             n1, n2 = names[i], names[j]
             jsd = float(jensenshannon(dists[n1], dists[n2]))
             jsd_vals.append(jsd)
@@ -122,35 +119,38 @@ def compute_PE(articles):
 
 
 def compute_ICI(articles):
-    from sentence_transformers import SentenceTransformer
+    from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
-    print("[ICI] Computing Intra-contextual Incoherence...")
-
-    model = SentenceTransformer(SBERT_MODEL)
+    print("[ICI] Computing Intra-contextual Incoherence (TF-IDF)...")
 
     outlet_groups = {}
     for a in articles:
-        outlet_groups.setdefault(a["media_name"], []).append(a["text"][:1000])
+        outlet_groups.setdefault(a["media_name"], []).append(a["text"][:500])
     outlets = {k: v for k, v in outlet_groups.items()
                if len(v) >= MIN_ARTICLES_PER_OUTLET}
 
     if len(outlets) < 2:
         raise RuntimeError(f"Too few outlets: {len(outlets)}")
 
-    embeddings = {}
-    for name, texts in outlets.items():
-        emb = model.encode(texts, batch_size=32, show_progress_bar=False)
-        embeddings[name] = np.mean(emb, axis=0)
-        print(f"  Embedded {name}: {len(texts)} articles")
+    # TF-IDF mean vector per outlet
+    all_texts_flat = [t for texts in outlets.values() for t in texts]
+    vectorizer = TfidfVectorizer(max_features=2000, stop_words="english", ngram_range=(1,2))
+    vectorizer.fit(all_texts_flat)
 
-    names = list(embeddings.keys())
+    outlet_vecs = {}
+    for name, texts in outlets.items():
+        mat = vectorizer.transform(texts)
+        outlet_vecs[name] = np.asarray(mat.mean(axis=0)).flatten()
+        print(f"  Vectorized {name}: {len(texts)} articles")
+
+    names = list(outlet_vecs.keys())
     cos_dists, pairs = [], []
     for i in range(len(names)):
-        for j in range(i + 1, len(names)):
+        for j in range(i+1, len(names)):
             n1, n2 = names[i], names[j]
             sim = float(cosine_similarity(
-                embeddings[n1].reshape(1, -1),
-                embeddings[n2].reshape(1, -1)
+                outlet_vecs[n1].reshape(1,-1),
+                outlet_vecs[n2].reshape(1,-1)
             )[0][0])
             dist = round(1.0 - sim, 6)
             cos_dists.append(dist)
@@ -160,7 +160,8 @@ def compute_ICI(articles):
     ccfi = ICI > 0.84
     print(f"  ICI={ICI} | CCFI={'CONFIRMAT' if ccfi else 'nu'} (prag 0.84)")
     return {"ICI": ICI, "n_pairs": len(pairs), "outlet_pairs": pairs,
-            "ccfi_flag": ccfi, "ccfi_threshold": 0.84}
+            "ccfi_flag": ccfi, "ccfi_threshold": 0.84,
+            "method": "TF-IDF cosine (bigrams, max_features=2000)"}
 
 
 def main():
