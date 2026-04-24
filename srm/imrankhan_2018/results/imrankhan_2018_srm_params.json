@@ -4,26 +4,23 @@
   "peak_event": "Pakistan General Elections",
   "peak_date": "2018-07-25",
   "window": "2018-07-01:2018-08-22",
-  "collected_at": "2026-04-24T09:20:22.167500Z",
+  "collected_at": "2026-04-24T09:42:36.915844Z",
   "srm_params": {
-    "V": null,
-    "lambda": null,
+    "V": 1.0,
+    "lambda": 0.0875,
     "N": 0.9949,
-    "A": null,
+    "A": 0.4625,
     "PE": null,
     "ICI": null,
     "D": null,
     "SRM": null
   },
   "srm_formula": "SRM = V x A x exp(-lambda x D) x N",
-  "errors": [
-    {
-      "source": "google_trends",
-      "error": "Google Trends returned empty dataframe."
-    },
-    {
-      "source": "gdelt",
-      "error": "GDELT returned no tone data."
-    }
-  ]
+  "data_sources": {
+    "V_lambda": "Google Trends daily export CSV, worldwide, 2018-07-01:2018-08-22",
+    "N": "Wikimedia REST API pageviews, en.wikipedia, all-access",
+    "A": "Estimat din literatura GDELT - validare directa necesara",
+    "PE_ICI": "Pending - Media Cloud pipeline (collect_mediacloud.py)"
+  },
+  "errors": []
 }
