@@ -1,0 +1,29 @@
+{
+  "symbol": "Imran Khan",
+  "symbol_slug": "imrankhan_2018",
+  "peak_event": "Pakistan General Elections",
+  "peak_date": "2018-07-25",
+  "window": "2018-07-01:2018-08-22",
+  "collected_at": "2026-04-24T09:20:22.167500Z",
+  "srm_params": {
+    "V": null,
+    "lambda": null,
+    "N": 0.9949,
+    "A": null,
+    "PE": null,
+    "ICI": null,
+    "D": null,
+    "SRM": null
+  },
+  "srm_formula": "SRM = V x A x exp(-lambda x D) x N",
+  "errors": [
+    {
+      "source": "google_trends",
+      "error": "Google Trends returned empty dataframe."
+    },
+    {
+      "source": "gdelt",
+      "error": "GDELT returned no tone data."
+    }
+  ]
+}
