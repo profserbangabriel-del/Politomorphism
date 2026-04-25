@@ -10,10 +10,11 @@
     "lambda": 0.0875,
     "N": 0.9949,
     "A": 0.4625,
-    "PE": null,
-    "ICI": null,
-    "D": null,
-    "SRM": null
+    "PE": 0.5722,
+    "ICI": 0.7163,
+    "D": 0.6442,
+    "SRM": 0.434922,
+    "D_formula": "D = (PE + ICI) / 2"
   },
   "srm_formula": "SRM = V x A x exp(-lambda x D) x N",
   "data_sources": {
