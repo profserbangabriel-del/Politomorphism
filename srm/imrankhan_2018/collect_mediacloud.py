@@ -139,12 +139,20 @@ def compute_PE(articles):
         for j in range(i+1, len(names)):
             n1, n2 = names[i], names[j]
             jsd = float(jensenshannon(dists[n1], dists[n2]))
-            jsd_vals.append(jsd)
             pairs.append({"outlet_1": n1, "outlet_2": n2, "jsd": round(jsd, 6)})
+            if not np.isnan(jsd):
+                jsd_vals.append(jsd)
 
-    PE = round(float(np.mean(jsd_vals)), 4)
-    print(f"  PE={PE} ({len(pairs)} pairs)")
-    return {"PE": PE, "n_pairs": len(pairs), "outlet_pairs": pairs}
+    n_nan = len(pairs) - len(jsd_vals)
+    PE = round(float(np.mean(jsd_vals)), 4) if jsd_vals else float("nan")
+    print(f"  PE={PE} ({len(jsd_vals)} valid pairs, {n_nan} NaN excluded)")
+    return {
+        "PE": PE,
+        "n_pairs": len(pairs),
+        "n_valid_pairs": len(jsd_vals),
+        "n_nan_excluded": n_nan,
+        "outlet_pairs": pairs
+    }
 
 
 def compute_ICI(articles):
@@ -169,7 +177,6 @@ def compute_ICI(articles):
     for name, texts in outlets.items():
         mat = vectorizer.transform(texts)
         outlet_vecs[name] = np.asarray(mat.mean(axis=0)).flatten()
-        print(f"  Vectorized {name}: {len(texts)} articles")
 
     names = list(outlet_vecs.keys())
     cos_dists, pairs = [], []
@@ -187,9 +194,14 @@ def compute_ICI(articles):
     ICI = round(float(np.mean(cos_dists)), 4)
     ccfi = ICI > 0.84
     print(f"  ICI={ICI} | CCFI={'CONFIRMAT' if ccfi else 'nu'} (prag 0.84)")
-    return {"ICI": ICI, "n_pairs": len(pairs), "outlet_pairs": pairs,
-            "ccfi_flag": ccfi, "ccfi_threshold": 0.84,
-            "method": "TF-IDF cosine (bigrams, max_features=2000)"}
+    return {
+        "ICI": ICI,
+        "n_pairs": len(pairs),
+        "outlet_pairs": pairs,
+        "ccfi_flag": ccfi,
+        "ccfi_threshold": 0.84,
+        "method": "TF-IDF cosine (bigrams, max_features=2000)"
+    }
 
 
 def main():
@@ -207,8 +219,11 @@ def main():
 
     PE  = pe_result["PE"]
     ICI = ici_result["ICI"]
-    D   = round(PE + ICI, 4)
-    print(f"\n[D] {PE} + {ICI} = {D}")
+
+    # D = (PE + ICI) / 2 — normalizat pe [0,1] pentru consistenta cu dataset-ul SRM
+    D = round((PE + ICI) / 2, 4)
+    print(f"\n[D] ({PE} + {ICI}) / 2 = {D}")
+    print(f"    Nota: D = (PE + ICI) / 2, normalizat pe [0,1]")
 
     with open(RESULTS_DIR / f"{SYMBOL_SLUG}_pe_ici.json", "w") as f:
         json.dump({
@@ -218,6 +233,8 @@ def main():
             "pe": pe_result,
             "ici": ici_result,
             "D": D,
+            "D_formula": "D = (PE + ICI) / 2",
+            "D_note": "Normalizat pe [0,1] pentru consistenta cu dataset-ul SRM (10 simboluri)",
             "computed_at": datetime.utcnow().isoformat() + "Z"
         }, f, indent=2)
 
@@ -229,6 +246,7 @@ def main():
         p["PE"]  = PE
         p["ICI"] = ICI
         p["D"]   = D
+        p["D_formula"] = "D = (PE + ICI) / 2"
         V, A, lam, N = p.get("V"), p.get("A"), p.get("lambda"), p.get("N")
         if all(v is not None for v in [V, A, lam, N]):
             SRM = round(float(V * A * np.exp(-lam * D) * N), 6)
@@ -238,9 +256,9 @@ def main():
             json.dump(params, f, indent=2)
 
     print("\n" + "=" * 55)
-    print(f"  PE   = {PE}")
+    print(f"  PE   = {PE}  ({pe_result['n_valid_pairs']} valid pairs)")
     print(f"  ICI  = {ICI}  {'<- CCFI CONFIRMAT' if ici_result['ccfi_flag'] else ''}")
-    print(f"  D    = {D}")
+    print(f"  D    = {D}  (normalizat)")
     print(f"  SRM  = {params['srm_params'].get('SRM')}")
     print("=" * 55)
 
