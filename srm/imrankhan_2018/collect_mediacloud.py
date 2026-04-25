@@ -7,15 +7,15 @@ from datetime import datetime
 
 SYMBOL        = "Imran Khan"
 SYMBOL_SLUG   = "imrankhan_2018"
-WINDOW_START  = "2018-07-01"
-WINDOW_END    = "2018-08-22"
+WINDOW_START  = datetime(2018, 7, 1)
+WINDOW_END    = datetime(2018, 8, 22)
 QUERY         = '"Imran Khan"'
 COLLECTION_IDS = [34412234, 38379429]
-TARGET_ARTICLES = 300          # redus de la 3000
+TARGET_ARTICLES = 300
 LDA_N_TOPICS  = 8
 LDA_PASSES    = 10
 LDA_RANDOM    = 42
-MIN_ARTICLES_PER_OUTLET = 3   # redus de la 5
+MIN_ARTICLES_PER_OUTLET = 3
 
 RESULTS_DIR = Path("srm/imrankhan_2018/results")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -132,7 +132,6 @@ def compute_ICI(articles):
     if len(outlets) < 2:
         raise RuntimeError(f"Too few outlets: {len(outlets)}")
 
-    # TF-IDF mean vector per outlet
     all_texts_flat = [t for texts in outlets.values() for t in texts]
     vectorizer = TfidfVectorizer(max_features=2000, stop_words="english", ngram_range=(1,2))
     vectorizer.fit(all_texts_flat)
@@ -185,7 +184,7 @@ def main():
     with open(RESULTS_DIR / f"{SYMBOL_SLUG}_pe_ici.json", "w") as f:
         json.dump({
             "symbol": SYMBOL,
-            "window": f"{WINDOW_START}:{WINDOW_END}",
+            "window": f"{WINDOW_START.date()}:{WINDOW_END.date()}",
             "n_articles": len(articles),
             "pe": pe_result,
             "ici": ici_result,
