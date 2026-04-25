@@ -4,16 +4,16 @@
   "peak_event": "Pakistan General Elections",
   "peak_date": "2018-07-25",
   "window": "2018-07-01:2018-08-22",
-  "collected_at": "2026-04-25T15:47:36.460866Z",
+  "collected_at": "2026-04-25T16:17:39.426516Z",
   "srm_params": {
     "V": 1.0,
     "lambda": 0.0875,
     "N": 0.9949,
     "A": 0.4625,
-    "PE": NaN,
-    "ICI": 0.7163,
-    "D": NaN,
-    "SRM": NaN
+    "PE": null,
+    "ICI": null,
+    "D": null,
+    "SRM": null
   },
   "srm_formula": "SRM = V x A x exp(-lambda x D) x N",
   "data_sources": {
