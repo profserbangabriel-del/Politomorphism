@@ -58,7 +58,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install NLP dependencies
-        run: pip install mediacloud gensim sentence-transformers scikit-learn numpy scipy
+        run: pip install mediacloud gensim scikit-learn numpy scipy
 
       - name: Run Media Cloud pipeline
         run: python srm/imrankhan_2018/collect_mediacloud.py
