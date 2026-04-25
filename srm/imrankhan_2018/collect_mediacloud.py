@@ -3,26 +3,52 @@ import json
 import time
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, date
 
 SYMBOL        = "Imran Khan"
 SYMBOL_SLUG   = "imrankhan_2018"
-WINDOW_START  = datetime(2018, 7, 1)
-WINDOW_END    = datetime(2018, 8, 22)
+WINDOW_START  = date(2018, 7, 1)
+WINDOW_END    = date(2018, 8, 22)
 QUERY         = '"Imran Khan"'
 COLLECTION_IDS = [34412234, 38379429]
 TARGET_ARTICLES = 300
 LDA_N_TOPICS  = 8
 LDA_PASSES    = 10
 LDA_RANDOM    = 42
-MIN_ARTICLES_PER_OUTLET = 3
+MIN_ARTICLES_PER_OUTLET = 1
 
 RESULTS_DIR = Path("srm/imrankhan_2018/results")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def extract_media_name(s):
+    # Încearcă toate câmpurile posibile din răspunsul Media Cloud
+    for key in ["media_name", "source_common_name", "media_url"]:
+        val = s.get(key)
+        if val and val != "unknown":
+            return str(val)
+    source = s.get("source", {})
+    if isinstance(source, dict):
+        for key in ["name", "common_name", "url"]:
+            val = source.get(key)
+            if val and val != "unknown":
+                return str(val)
+    # fallback: folosim domeniul din URL
+    url = s.get("url", "")
+    if url:
+        try:
+            from urllib.parse import urlparse
+            domain = urlparse(url).netloc.replace("www.", "")
+            if domain:
+                return domain
+        except Exception:
+            pass
+    return "unknown"
+
+
 def collect_articles(api_key):
     from mediacloud.api import SearchApi
+    import warnings
     print("[MC] Fetching articles...")
     mc = SearchApi(api_key)
     all_articles = []
@@ -30,13 +56,15 @@ def collect_articles(api_key):
 
     while len(all_articles) < TARGET_ARTICLES:
         try:
-            results, pagination_token = mc.story_list(
-                query=QUERY,
-                start_date=WINDOW_START,
-                end_date=WINDOW_END,
-                collection_ids=COLLECTION_IDS,
-                pagination_token=pagination_token
-            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                results, pagination_token = mc.story_list(
+                    query=QUERY,
+                    start_date=WINDOW_START,
+                    end_date=WINDOW_END,
+                    collection_ids=COLLECTION_IDS,
+                    pagination_token=pagination_token
+                )
         except Exception as e:
             print(f"  Error: {e}. Retrying in 10s...")
             time.sleep(10)
@@ -46,11 +74,12 @@ def collect_articles(api_key):
             break
 
         for s in results:
+            media_name = extract_media_name(s)
             all_articles.append({
                 "story_id":   s.get("id", ""),
                 "url":        s.get("url", ""),
                 "title":      s.get("title", ""),
-                "media_name": s.get("source", {}).get("name", "unknown"),
+                "media_name": media_name,
                 "text":       s.get("text", "") or s.get("title", "") or ""
             })
 
@@ -62,6 +91,11 @@ def collect_articles(api_key):
 
     articles = [a for a in all_articles if len(a.get("text", "")) > 50]
     print(f"  {len(articles)} articles after filter")
+
+    # Debug: afișează primele 5 media_name-uri găsite
+    names_sample = list({a["media_name"] for a in articles})[:10]
+    print(f"  Sample outlets: {names_sample}")
+
     return articles
 
 
@@ -77,10 +111,10 @@ def compute_PE(articles):
     outlets = {k: v for k, v in outlet_groups.items()
                if len(v) >= MIN_ARTICLES_PER_OUTLET}
 
-    if len(outlets) < 2:
-        raise RuntimeError(f"Too few outlets: {len(outlets)}")
+    print(f"  Outlets ({len(outlets)}): {list(outlets.keys())[:15]}")
 
-    print(f"  Outlets ({len(outlets)}): {list(outlets.keys())}")
+    if len(outlets) < 2:
+        raise RuntimeError(f"Too few outlets: {len(outlets)}. Total groups: {len(outlet_groups)}")
 
     all_texts = [simple_preprocess(t, deacc=True)
                  for texts in outlets.values() for t in texts]
@@ -184,7 +218,7 @@ def main():
     with open(RESULTS_DIR / f"{SYMBOL_SLUG}_pe_ici.json", "w") as f:
         json.dump({
             "symbol": SYMBOL,
-            "window": f"{WINDOW_START.date()}:{WINDOW_END.date()}",
+            "window": f"{WINDOW_START}:{WINDOW_END}",
             "n_articles": len(articles),
             "pe": pe_result,
             "ici": ici_result,
