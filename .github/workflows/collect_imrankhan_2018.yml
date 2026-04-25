@@ -28,7 +28,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git add srm/imrankhan_2018/results/
           git diff --staged --quiet || git commit -m "ci: imrankhan 2018 quantitative [run ${{ github.run_id }}]"
-          git pull --rebase origin main
+          git pull --rebase -X ours origin main
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -68,7 +68,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git add srm/imrankhan_2018/results/
           git diff --staged --quiet || git commit -m "ci: imrankhan 2018 PE/ICI complete [run ${{ github.run_id }}]"
-          git pull --rebase origin main
+          git pull --rebase -X ours origin main
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
