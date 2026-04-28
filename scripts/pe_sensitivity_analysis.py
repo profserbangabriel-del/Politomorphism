@@ -182,4 +182,188 @@ def analyse_symbol(symbol, texts, k_values, bootstrap_n, random_state):
         log.info(f"  Computing NPMI coherence...")
         npmi = compute_npmi_coherence(lda, dtm, vocab)
         results[f"pe_K{k}"] = round(pe_stats["pe_mean"], 6)
-        results[f"pe_std_K{k}"
+        results[f"pe_std_K{k}"] = round(pe_stats["pe_std"], 6)
+        results[f"pe_ci_low_K{k}"] = round(pe_stats["pe_ci_low"], 6)
+        results[f"pe_ci_high_K{k}"] = round(pe_stats["pe_ci_high"], 6)
+        results[f"npmi_K{k}"] = round(npmi, 6)
+        results[f"lda_time_s_K{k}"] = round(elapsed, 1)
+        log.info(
+            f"  K={k}: PE={pe_stats['pe_mean']:.4f} "
+            f"[{pe_stats['pe_ci_low']:.4f}, {pe_stats['pe_ci_high']:.4f}] "
+            f"| NPMI={npmi:.4f} | t={elapsed:.1f}s"
+        )
+
+    pe_k10 = results.get(f"pe_K{K_PRIMARY}", None)
+    if pe_k10 is not None and pe_k10 > 0:
+        deviations = [
+            abs(results.get(f"pe_K{k}", pe_k10) - pe_k10)
+            for k in k_values
+        ]
+        results["max_abs_deviation_from_K10"] = round(max(deviations), 6)
+        results["cv_pe"] = round(
+            np.std([results[f"pe_K{k}"] for k in k_values]) /
+            np.mean([results[f"pe_K{k}"] for k in k_values]),
+            6
+        )
+        npmi_vals = {
+            k: results.get(f"npmi_K{k}", float("-inf"))
+            for k in k_values
+        }
+        results["best_npmi_K"] = max(npmi_vals, key=npmi_vals.get)
+    return results
+
+
+def build_summary_report(all_results, k_values):
+    lines = []
+    lines.append("=" * 70)
+    lines.append("PE SENSITIVITY ANALYSIS — POLITOMORPHISM RESEARCH PROJECT")
+    lines.append(f"K values tested: {k_values} | Primary K: {K_PRIMARY}")
+    lines.append("=" * 70)
+    lines.append("")
+
+    max_devs = [
+        r["max_abs_deviation_from_K10"]
+        for r in all_results
+        if "max_abs_deviation_from_K10" in r
+    ]
+    cvs = [r["cv_pe"] for r in all_results if "cv_pe" in r]
+
+    if max_devs:
+        lines.append("AGGREGATE STABILITY METRICS")
+        lines.append("  Max absolute deviation from K=10 across all symbols:")
+        lines.append(f"    Mean:  {np.mean(max_devs):.4f}")
+        lines.append(f"    Max:   {np.max(max_devs):.4f}")
+        lines.append(f"    Min:   {np.min(max_devs):.4f}")
+        lines.append("  Coefficient of variation of PE across K values:")
+        lines.append(f"    Mean:  {np.mean(cvs):.4f}")
+        lines.append(f"    Max:   {np.max(cvs):.4f}")
+        lines.append("")
+
+    lines.append("PER-SYMBOL PE TABLE")
+    lines.append(
+        f"{'Symbol':<20} {'PE_K5':>8} {'PE_K10':>8} {'PE_K15':>8} "
+        f"{'MaxDev':>8} {'CV':>7} {'BestNPMI_K':>12}"
+    )
+    lines.append("-" * 75)
+    for r in all_results:
+        lines.append(
+            f"{r['symbol']:<20} "
+            f"{r.get('pe_K5', float('nan')):>8.4f} "
+            f"{r.get('pe_K10', float('nan')):>8.4f} "
+            f"{r.get('pe_K15', float('nan')):>8.4f} "
+            f"{r.get('max_abs_deviation_from_K10', float('nan')):>8.4f} "
+            f"{r.get('cv_pe', float('nan')):>7.4f} "
+            f"{str(r.get('best_npmi_K', '—')):>12}"
+        )
+
+    lines.append("")
+    lines.append("NPMI COHERENCE TABLE")
+    lines.append(
+        f"{'Symbol':<20} {'NPMI_K5':>9} {'NPMI_K10':>10} {'NPMI_K15':>10}"
+    )
+    lines.append("-" * 55)
+    for r in all_results:
+        lines.append(
+            f"{r['symbol']:<20} "
+            f"{r.get('npmi_K5', float('nan')):>9.4f} "
+            f"{r.get('npmi_K10', float('nan')):>10.4f} "
+            f"{r.get('npmi_K15', float('nan')):>10.4f}"
+        )
+
+    lines.append("")
+    lines.append("INTERPRETATION GUIDE")
+    lines.append("  MaxDev < 0.005  : PE stable — K=10 choice is robust.")
+    lines.append("  MaxDev 0.005-0.010 : Moderate sensitivity — note in Supplementary.")
+    lines.append("  MaxDev > 0.010  : High sensitivity — investigate corpus.")
+    lines.append(
+        "  Higher NPMI = better topic coherence; "
+        "BestNPMI_K shows if K=10 is optimal."
+    )
+    lines.append("")
+    lines.append("Reproducibility: random_state=42, sklearn LDA batch mode,")
+    lines.append("max_iter=20, doc_topic_prior=None (sklearn default=1/K),")
+    lines.append("topic_word_prior=0.01.")
+    lines.append("=" * 70)
+    return "\n".join(lines)
+
+
+def parse_args():
+    p = argparse.ArgumentParser(
+        description="PE Sensitivity Analysis: K=5 vs K=10 vs K=15"
+    )
+    p.add_argument("--input_dir", type=Path, default=Path("./corpora"))
+    p.add_argument(
+        "--symbols", nargs="+",
+        default=["Trump", "Modi_2014", "Putin", "Sunflower", "CharlieHebdo"]
+    )
+    p.add_argument("--output_dir", type=Path, default=Path("./sensitivity_results"))
+    p.add_argument("--bootstrap_n", type=int, default=200)
+    p.add_argument("--random_state", type=int, default=42)
+    p.add_argument("--k_values", nargs="+", type=int, default=[5, 10, 15])
+    return p.parse_args()
+
+
+def main():
+    args = parse_args()
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    global K_VALUES
+    K_VALUES = args.k_values
+
+    log.info(f"Symbols:    {args.symbols}")
+    log.info(f"K values:   {K_VALUES}")
+    log.info(f"Bootstrap:  n={args.bootstrap_n}")
+    log.info(f"Input dir:  {args.input_dir}")
+    log.info(f"Output dir: {args.output_dir}")
+
+    all_results = []
+    failed = []
+
+    for symbol in args.symbols:
+        log.info(f"--- {symbol} ---")
+        try:
+            corpus_path = find_corpus_file(args.input_dir, symbol)
+            texts = load_corpus(corpus_path)
+            result = analyse_symbol(
+                symbol=symbol,
+                texts=texts,
+                k_values=K_VALUES,
+                bootstrap_n=args.bootstrap_n,
+                random_state=args.random_state,
+            )
+            all_results.append(result)
+        except Exception as e:
+            log.error(f"  FAILED: {e}")
+            failed.append((symbol, str(e)))
+
+    if not all_results:
+        log.error("No symbols completed successfully. Exiting.")
+        sys.exit(1)
+
+    df = pd.DataFrame(all_results)
+
+    pe_table_path = args.output_dir / "pe_sensitivity_table.csv"
+    df.to_csv(pe_table_path, index=False, float_format="%.6f")
+    log.info(f"Saved: {pe_table_path}")
+
+    npmi_cols = ["symbol"] + [f"npmi_K{k}" for k in K_VALUES] + ["best_npmi_K"]
+    npmi_cols = [c for c in npmi_cols if c in df.columns]
+    npmi_path = args.output_dir / "npmi_coherence_table.csv"
+    df[npmi_cols].to_csv(npmi_path, index=False, float_format="%.6f")
+    log.info(f"Saved: {npmi_path}")
+
+    report = build_summary_report(all_results, K_VALUES)
+    report_path = args.output_dir / "pe_sensitivity_summary.txt"
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write(report)
+    log.info(f"Saved: {report_path}")
+
+    print("\n" + report)
+
+    if failed:
+        log.warning(f"Failed: {[s for s, _ in failed]}")
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()
