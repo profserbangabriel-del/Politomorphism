@@ -39,9 +39,11 @@ def load_corpus(filepath):
         df = pd.read_csv(filepath, encoding="utf-8", on_bad_lines="skip")
         col = next((c for c in df.columns if c.lower() == "title"), None)
         if col is None:
-            raise ValueError(
-                f"{filepath.name}: no 'title' column found. "
-                f"Available columns: {list(df.columns)}"
+            # fallback: use first column
+            col = df.columns[0]
+            log.warning(
+                f"  No 'title' column found in {filepath.name}. "
+                f"Using first column: '{col}'"
             )
         titles = df[col].dropna().astype(str).tolist()
     else:
@@ -54,13 +56,18 @@ def load_corpus(filepath):
 
 
 def find_corpus_file(input_dir, symbol):
-    for ext in (".csv", ".txt"):
-        p = Path(input_dir) / f"{symbol}{ext}"
+    candidates = [
+        Path(input_dir) / f"{symbol}-DATA.csv",
+        Path(input_dir) / f"{symbol}_DATA.csv",
+        Path(input_dir) / f"{symbol}.csv",
+        Path(input_dir) / f"{symbol}.txt",
+    ]
+    for p in candidates:
         if p.exists():
             return p
     raise FileNotFoundError(
         f"No corpus file found for symbol '{symbol}' in {input_dir}. "
-        f"Expected: {symbol}.csv or {symbol}.txt"
+        f"Tried: {[str(c) for c in candidates]}"
     )
 
 
@@ -273,10 +280,10 @@ def build_summary_report(all_results, k_values):
     lines.append("")
     lines.append("INTERPRETATION GUIDE")
     lines.append("  MaxDev < 0.005  : PE stable — K=10 choice is robust.")
-    lines.append("  MaxDev 0.005-0.010 : Moderate sensitivity — note in Supplementary.")
+    lines.append("  MaxDev 0.005-0.010 : Moderate — note in Supplementary.")
     lines.append("  MaxDev > 0.010  : High sensitivity — investigate corpus.")
     lines.append(
-        "  Higher NPMI = better topic coherence; "
+        "  Higher NPMI = better coherence; "
         "BestNPMI_K shows if K=10 is optimal."
     )
     lines.append("")
@@ -291,10 +298,11 @@ def parse_args():
     p = argparse.ArgumentParser(
         description="PE Sensitivity Analysis: K=5 vs K=10 vs K=15"
     )
-    p.add_argument("--input_dir", type=Path, default=Path("./corpora"))
+    p.add_argument("--input_dir", type=Path, default=Path("."))
     p.add_argument(
         "--symbols", nargs="+",
-        default=["Trump", "Modi_2014", "Putin", "Sunflower", "CharlieHebdo"]
+        default=["Trump", "Modi", "Modi2019", "Modi2024",
+                 "Putin", "Sunflower", "CharlieHebdo"]
     )
     p.add_argument("--output_dir", type=Path, default=Path("./sensitivity_results"))
     p.add_argument("--bootstrap_n", type=int, default=200)
