@@ -1,0 +1,86 @@
+name: PE Sensitivity Analysis (K=5 vs K=10 vs K=15)
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbols:
+        description: >
+          Comma-separated symbol names matching corpus filenames in data/corpora/
+          Example: Trump,Modi_2014,Putin,Sunflower,CharlieHebdo
+        required: false
+        default: "Trump,Modi_2014,Putin,Sunflower,CharlieHebdo"
+      bootstrap_n:
+        description: Bootstrap iterations for PE confidence intervals
+        required: false
+        default: "200"
+      k_values:
+        description: "K values to test (space-separated)"
+        required: false
+        default: "5 10 15"
+
+jobs:
+  pe-sensitivity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install \
+            scikit-learn==1.4.2 \
+            numpy==1.26.4 \
+            pandas==2.2.2
+
+      - name: Verify corpus files exist
+        id: verify
+        run: |
+          SYMBOLS="${{ github.event.inputs.symbols }}"
+          IFS=',' read -ra SYM_ARRAY <<< "$SYMBOLS"
+          for sym in "${SYM_ARRAY[@]}"; do
+            sym_trim=$(echo "$sym" | xargs)
+            if [ ! -f "data/corpora/${sym_trim}.csv" ] && \
+               [ ! -f "data/corpora/${sym_trim}.txt" ]; then
+              echo "::warning::Missing corpus file for: ${sym_trim}"
+            fi
+          done
+          echo "symbols_clean=$(echo $SYMBOLS | tr ',' ' ')" >> $GITHUB_OUTPUT
+
+      - name: Run PE sensitivity analysis
+        run: |
+          python scripts/pe_sensitivity_analysis.py \
+            --input_dir data/corpora \
+            --symbols ${{ steps.verify.outputs.symbols_clean }} \
+            --output_dir sensitivity_results \
+            --bootstrap_n ${{ github.event.inputs.bootstrap_n }} \
+            --k_values ${{ github.event.inputs.k_values }}
+
+      - name: Display summary report
+        run: cat sensitivity_results/pe_sensitivity_summary.txt
+
+      - name: Upload results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PE-Sensitivity-Results-K5-K10-K15
+          path: sensitivity_results/
+          retention-days: 90
+
+      - name: Job summary
+        run: |
+          echo "## PE Sensitivity Analysis Complete" >> $GITHUB_STEP_SUMMARY
+          echo "**Symbols:** \`${{ github.event.inputs.symbols }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**K values:** \`${{ github.event.inputs.k_values }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Bootstrap n:** \`${{ github.event.inputs.bootstrap_n }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat sensitivity_results/pe_sensitivity_summary.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
