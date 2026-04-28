@@ -5,10 +5,10 @@ on:
     inputs:
       symbols:
         description: >
-          Comma-separated symbol names matching corpus filenames in data/corpora/
-          Example: Trump,Modi_2014,Putin,Sunflower,CharlieHebdo
+          Comma-separated symbol names. Must match filenames in repo root
+          as <symbol>-DATA.csv. Example: Trump,Modi,Modi2019,Modi2024,Putin
         required: false
-        default: "Trump,Modi_2014,Putin,Sunflower,CharlieHebdo"
+        default: "Trump,Modi,Modi2019,Modi2024,Putin,Sunflower,CharlieHebdo"
       bootstrap_n:
         description: Bootstrap iterations for PE confidence intervals
         required: false
@@ -41,25 +41,22 @@ jobs:
             numpy==1.26.4 \
             pandas==2.2.2
 
-      - name: Verify corpus files exist
-        id: verify
+      - name: List available corpus files
+        run: |
+          echo "=== CSV files in repo root ==="
+          ls -la *.csv || echo "No CSV files in root"
+
+      - name: Prepare symbols list
+        id: prep
         run: |
           SYMBOLS="${{ github.event.inputs.symbols }}"
-          IFS=',' read -ra SYM_ARRAY <<< "$SYMBOLS"
-          for sym in "${SYM_ARRAY[@]}"; do
-            sym_trim=$(echo "$sym" | xargs)
-            if [ ! -f "data/corpora/${sym_trim}.csv" ] && \
-               [ ! -f "data/corpora/${sym_trim}.txt" ]; then
-              echo "::warning::Missing corpus file for: ${sym_trim}"
-            fi
-          done
           echo "symbols_clean=$(echo $SYMBOLS | tr ',' ' ')" >> $GITHUB_OUTPUT
 
       - name: Run PE sensitivity analysis
         run: |
           python scripts/pe_sensitivity_analysis.py \
-            --input_dir data/corpora \
-            --symbols ${{ steps.verify.outputs.symbols_clean }} \
+            --input_dir . \
+            --symbols ${{ steps.prep.outputs.symbols_clean }} \
             --output_dir sensitivity_results \
             --bootstrap_n ${{ github.event.inputs.bootstrap_n }} \
             --k_values ${{ github.event.inputs.k_values }}
