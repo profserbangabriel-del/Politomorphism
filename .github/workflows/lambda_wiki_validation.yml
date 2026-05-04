@@ -6,6 +6,7 @@ on:
 jobs:
   lambda-robustness:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -15,13 +16,15 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests scipy numpy
+        run: pip install requests scipy numpy matplotlib
 
-      - name: Run validation
-        run: python srm/lambda_wiki_validation.py
+      - name: Run baseline pipeline
+        run: python srm/lambda_wiki_baseline_pipeline.py
 
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: lambda-wiki-results
-          path: lambda_wiki_results.json
+          path: |
+            lambda_wiki_baseline_results.json
+            *.png
